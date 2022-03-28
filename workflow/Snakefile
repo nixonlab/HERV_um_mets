@@ -1,4 +1,30 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+from snakemake.utils import min_version
+import os
+import pandas as pd
+
+min_version("6.4.1")
+
+configfile: "config/config.yaml"
+
+include: "rules/common.smk"
+include: "rules/download_bam.smk"
+include: "rules/align_star.smk"
+include: "rules/telescope.smk"
+include: "rules/stringtie.smk"
+
+
+localrules: sample_complete
+rule sample_complete:
+    input:
+        "results/align_multi/{sample_id}/Aligned.out.cram",
+        rules.telescope.output,
+        rules.stringtie.output
+    output:
+        touch("results/complete/{sample_id}.txt")
+
+localrules: all
+rule all:
+    input:
+        expand("results/complete/{s}.txt", s=list(samples.index))

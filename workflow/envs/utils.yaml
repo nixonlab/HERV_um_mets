@@ -1,0 +1,8 @@
+name: utils
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - samtools
+  - picard-slim
