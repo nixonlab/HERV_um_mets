@@ -13,11 +13,11 @@ msk_runs = {}
 for s in msk_samples:
     msk_runs[s] = sorted(glob('%s/%s.L00?.unaligned.bam' % (msk_dirs[s], s)))
 
-
 def msk_run_ubams(wc):
     return msk_runs[wc.sample_id]
 
 
+localrules: merge_run_ubam
 rule merge_run_ubam:
     input:
         msk_run_ubams
@@ -34,7 +34,11 @@ for f in {input}; do
     samtools view --no-PG -H $f | grep '^@RG' >> {params.rawdir}/header.sam
 done
 
-samtools cat -H {params.rawdir}/header.sam -o {output} {input}
+samtools cat -h {params.rawdir}/header.sam -o {output} {input}
         '''
 
 
+localrules: make_msk_ubams
+rule make_msk_ubams:
+    input:
+        expand("results/ubam/{sample_id}.bam", sample_id=msk_samples)
