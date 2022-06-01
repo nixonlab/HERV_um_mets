@@ -1,28 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-msk_samples = [
-    'SK_MEL_1316A_T',
-    'SK_MEL_1313A_T',
-    'SK_MEL_1299A_T',
-    'SK_MEL_1331A_T',
-    'SK_MEL_1058B_T',
-    'SK_MEL_1327A_T',
-    'SK_MEL_1330A_T',
-    'SK_MEL_1306B_T',
-    'SK_MEL_1306A_T',
-    'SK_MEL_1313B_T',
-    'SK_MEL_1331B_T',
-    'SK_MEL_1299B_T',
-    'SK_MEL_1328A_T',
-    'SK_MEL_1327B_T',
-    'SK_MEL_1330B_T',
-]
+from glob import glob
+
+# msk_samples is from common.smk
+
 msk_dirs = {k:glob('raw/*%s*' % k) for k in msk_samples}
 assert all(len(v)==1 for v in msk_dirs.values())
 msk_dirs = {k:v[0] for k,v in msk_dirs.items()}
 
-msk_runs = {s:glob('%s/%s.L00?.unaligned.bam' % (msk_dirs[s], s)) for s in msk_samples}
+msk_runs = {}
+for s in msk_samples:
+    msk_runs[s] = sorted(glob('%s/%s.L00?.unaligned.bam' % (msk_dirs[s], s)))
 
 
 def msk_run_ubams(wc):
@@ -44,4 +33,8 @@ samtools view --no-PG -H {input[0]} | grep -v '^@RG' > {params.rawdir}/header.sa
 for f in {input}; do
     samtools view --no-PG -H $f | grep '^@RG' >> {params.rawdir}/header.sam
 done
+
+samtools cat -H {params.rawdir}/header.sam -o {output} {input}
         '''
+
+

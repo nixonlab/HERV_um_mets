@@ -19,6 +19,10 @@ msk_samples = [
     'SK_MEL_1330B_T',
 ]
 
+samples = pd.DataFrame(
+        {'sample_id': msk_samples,}
+    ).set_index("sample_id", drop=False)
+
 # samples = (
 #     pd.read_csv(
 #         config['samples'],
