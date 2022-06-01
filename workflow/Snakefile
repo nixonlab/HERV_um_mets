@@ -9,7 +9,8 @@ min_version("6.4.1")
 configfile: "config/config.yaml"
 
 include: "rules/common.smk"
-include: "rules/download_bam.smk"
+# include: "rules/download_bam.smk"
+include: "rules/make_ubam.smk"
 include: "rules/align_star.smk"
 include: "rules/telescope.smk"
 include: "rules/stringtie.smk"
