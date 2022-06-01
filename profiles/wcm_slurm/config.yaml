@@ -1,4 +1,4 @@
-config: tmpdir="/local"
+config: tmpdir="/scratch"
 cluster:
     sbatch {cluster.args} 
         --partition={cluster.partition}
