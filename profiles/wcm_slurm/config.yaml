@@ -6,6 +6,7 @@ cluster:
         --cpus-per-task={cluster.cpus-per-task}
         --output={cluster.output}
         --job-name={cluster.job-name}
+        --mem={cluster.mem}
         {cluster.exclusive}
 cluster-status: "slurm_status.py"
 cluster-config: "cluster.yaml"

@@ -2,46 +2,20 @@ __default__:
     args: "--parsable "
     partition: "panda"
     ntasks: 1
-    cpus-per-task: 32
-    output: "logs/slurm-%j.{rule}.{wildcards}.out"
-    job-name: "sm.{rule}.{wildcards}"
+    cpus-per-task: 2
+    mem: "8G"
+    output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
+    job-name: "sm.{rule}.{wildcards.sample_id}"
     exclusive: ""    
 star_align_multi:
     cpus-per-task: 32
-    output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
-    job-name: "sm.{rule}.{wildcards.sample_id}"
-original_bam_to_ubam:
-    cpus-per-task: 2
-    partition: "panda"
-    output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
-    job-name: "sm.{rule}.{wildcards.sample_id}"
-download_bam_gtex:
-    cpus-per-task: 2
-    partition: "panda"
-    output: "logs/slurm-%j.{rule}.{wildcards.file_name}.out"
-    job-name: "sm.{rule}.{wildcards.file_name}"
+    mem: "120G"
 telescope:
     cpus-per-task: 2
-    partition: "panda"
-    output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
-    job-name: "sm.{rule}.{wildcards.sample_id}"
-samtools_sort_cram:
-    cpus-per-task: 8
-    partition: "panda"
-    output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
-    job-name: "sm.{rule}.{wildcards.sample_id}"
-samtools_bam_cram:
-    cpus-per-task: 2
-    partition: "panda"
-    output: "logs/slurm-%j.{rule}.out"
-    job-name: "sm.{rule}"
-archive_sample:
-    cpus-per-task: 2
-    partition: "panda"
-    output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
-    job-name: "sm.{rule}.{wildcards.sample_id}"
 stringtie:
     cpus-per-task: 2
-    partition: "panda"
-    output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
-    job-name: "sm.{rule}.{wildcards.sample_id}"
+samtools_sort_cram:
+    cpus-per-task: 8
+samtools_bam_cram:
+    output: "logs/slurm-%j.{rule}.out"
+    job-name: "sm.{rule}"
