@@ -29,3 +29,8 @@ localrules: all
 rule all:
     input:
         expand("results/complete/{s}.txt", s=list(samples.index))
+
+localrules: msk
+rule msk:
+    input:
+        expand("results/complete/{s}.txt", s=list(samples.index))
