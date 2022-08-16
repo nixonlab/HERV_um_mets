@@ -1,0 +1,45 @@
+---
+title: "Cibersort Processing and Graphing"
+author: "Phoebe Fei"
+date: "2022-08-16"
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{css style_settings, echo = FALSE}
+blockquote { 
+    font-size: 14px; 
+    font-style: italic;
+}
+h1{
+    font-size: 22px;
+}
+h2{
+    font-size: 20px;
+}
+h3{
+    font-size: 18px;
+}
+h4{
+    font-size: 16px;
+}
+
+```
+
+### Libraries
+```{r, message=FALSE}
+library(stringr)
+library(DESeq2)
+library(ggplot2)
+library(dplyr)
+library(magrittr)
+library(pheatmap)
+library(viridis)
+library(biomaRt)
+library(UpSetR)
+library(edgeR)
+```
+
+

@@ -1,0 +1,159 @@
+---
+title: "Data Merging"
+author: "Phoebe Fei"
+date: "2022-08-15"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{css style_settings, echo = FALSE}
+blockquote { 
+    font-size: 14px; 
+    font-style: italic;
+}
+h1{
+    font-size: 22px;
+}
+h2{
+    font-size: 20px;
+}
+h3{
+    font-size: 18px;
+}
+h4{
+    font-size: 16px;
+}
+
+```
+
+### Libraries
+```{r, message=FALSE}
+library(stringr)
+library(ggplot2)
+library(dplyr)
+library(magrittr)
+library(viridis)
+library(UpSetR)
+library(edgeR)
+library(readxl)
+library(scopetools)
+```
+
+## Read in Raw Data
+
+```{r}
+sample_met <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/sample_info.csv")
+#Alex's supplement found in the paper
+alex_sup <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Supplement.csv")
+#load TCGA primary
+load("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/01-sample_data.Rdata")
+#mdata
+#cluster info
+load("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/09-de.Rdata")
+primary.col <- data.frame(colData(tform))
+#Nilsson Data
+
+```
+
+rename cols
+
+```{r}
+colnames(mdata)[which(colnames(mdata) == "stage_sim")] <- c("Cancer_stage")
+colnames(mdata)[which(colnames(mdata) == "gender")] <- c("Sex")
+colnames(mdata)[which(colnames(mdata) == "time_to_death")] <- c("Overall_survival")
+colnames(mdata)[which(colnames(mdata) == "time_to_met_or_death")] <- c("PFS")
+mdata$Herv.cluster <- primary.col[rownames(mdata),"clust.herv"]
+#overall survival
+colnames(alex_sup)[which(colnames(alex_sup) == "OS..mo")] <- c("Overall_survival")
+colnames(alex_sup)[which(colnames(alex_sup) == "PFS..mo")] <- c("PFS")
+colnames(alex_sup)[which(colnames(alex_sup) == "Patient.Number")] <- c("Patient_rename")
+alex_sup$Cancer_stage <- rep("M1", nrow(alex_sup))
+```
+
+
+#### Notes:
+
+PFS = Progression-Free Survival
+
+[Pilot Trial of Arginine Deprivation Plus Nivolumab and Ipilimumab in Patients with Metastatic Uveal Melanoma](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9179243/)
+
+[RECIST Classification](https://www.cibmtr.org/DataManagement/TrainingReference/Manuals/DataManagement/Documents/appendix-n.pdf):
+
+#### Response Evaluation Crteria in Solid Tumors
+
+**SD** = Stable Disease (NR/SD) - neither sufficeint shrinkage to qualify for partial response nor sufficient increase to qualify for progressive disease (PD)
+
+**PD** = Progressive Disease - A 20% or greater increase in the sum of the longest diameter of measured lesions.
+
+[Cancer Stages](https://www.cancer.net/cancer-types/melanoma/stages#:~:text=Stage%20IV%20is%20further%20evaluated,involve%20the%20central%20nervous%20system.)
+
+#### Stage groups for melanoma
+
+**Stage 0**: This refers to melanoma in situ, which means melanoma cells are found only in the outer layer of skin or epidermis. This stage of melanoma is very unlikely to spread to other parts of the body.The melanoma has not spread to any lymph nodes.
+
+**Stage I**: The primary melanoma is still only in the skin and is relatively thin. Stage I is divided into 2 subgroups, IA or IB, depending on the thickness of the melanoma and whether a pathologist sees ulceration under a microscope. The melanoma has not spread to any lymph nodes.
+
+**Stage II**: Stage II melanoma is thicker than stage I melanoma, extending through the epidermis and further into the dermis, the dense inner layer of the skin. The melanoma has not spread to any lymph nodes, but it has a higher chance of spreading. Stage II is divided into 3 subgroups—A, B, or C—depending on how thick the melanoma is and whether there is ulceration.
+
+**Stage III**: Stage III melanoma has spread locally or through the lymphatic system to a regional lymph node located near where the cancer started or to a skin site on the way to a lymph node, called in-transit metastasis, satellite metastasis, or microsatellite disease. The lymphatic system is part of the immune system and drains fluid from body tissues through a series of tubes or vessels. Stage III is divided into 4 subgroups—A, B, C, or D—depending on the thickness of the tumor, the size and number of lymph nodes involved with melanoma, whether the primary tumor has satellite or in-transit lesions, and if it appears ulcerated under a microscope.
+
+**Stage IV**: This stage describes melanoma that has spread through the bloodstream to other parts of the body, such as distant locations on the skin or soft tissue, distant lymph nodes, or other organs like the lung, liver, brain, bone, or gastrointestinal tract. 
+
+**Metastatic**:
+
+*M1a*: The cancer has only spread to distant skin and/or soft-tissue sites.
+
+*M1b*: The cancer has spread to the lung.
+
+*M1c*: The cancer has spread to any other location that does not involve the central nervous system.
+
+*M1d*: The cancer has spread to the central nervous system, including the brain, spinal cord, and/or cerebrospinal fluid, or lining of the brain and/or spinal cord.
+
+
+
+```{r}
+#rename columns to same units/measures
+levels(mdata$Cancer_stage)[levels(mdata$Cancer_stage)=="IV"] <- "M1"
+alex_sup$Overall_survival[which(alex_sup$Overall_survival == "31+")] <- 31
+alex_sup$Overall_survival <- as.numeric(alex_sup$Overall_survival)
+alex_sup$PFS <- as.numeric(alex_sup$PFS)
+alex_sup$Overall_survival <- alex_sup$Overall_survival*30
+alex_sup$PFS <- alex_sup$PFS*30
+alex_sup$Patient_rename <- paste("Patient", alex_sup$Patient_rename, sep=" ")
+```
+
+```{r}
+#create a combined table for UM mets 
+sample_meta <- data.frame(matrix(nrow = nrow(sample_met), ncol = (ncol(alex_sup)+ncol(sample_met))))
+colnames(sample_meta) <- c(colnames(sample_met), colnames(alex_sup))
+for(i in 1:nrow(sample_met)){
+  sample_meta[i,] <- c(sample_met[i,], alex_sup[which(alex_sup$Patient_rename == sample_met[i,"Patient_rename"]),])
+}
+#remove rep. cols
+sample_meta <- sample_meta[, !(duplicated(colnames(sample_meta)))]
+```
+
+Rearrage so that the primary separates out by HC clusters; Separate out the mutation information
+
+```{r}
+mdata <- mdata[order(mdata$Herv.cluster),]
+#all the mutation info in mdata
+mut_list <- c("GNAQ","GNA11","CYSLTR2","PLCB4","EIF1AX","SF3B1","SRSF2","BAP1")
+for (i in 1:length(mut_list)){
+  mutation <- mut_list[i]
+  mdata[,mutation] <- ifelse(mdata[,mutation] == "NA", "No", "Yes")
+  #all mutation info is in sample_meta$Tumor.Alteration.s
+  yes_row <- str_extract(sample_meta$Tumor.Alteration.s.,mutation)
+  sample_meta[,mutation] <- yes_row
+  sample_meta[,mutation] <- ifelse(is.na(sample_meta[,mutation]), "No","Yes")
+}
+```
+
+
+```{r, eval=FALSE}
+write.csv(sample_meta, "/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Updated Sample Info.csv", row.names =FALSE)
+
+```
