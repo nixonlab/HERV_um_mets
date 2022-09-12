@@ -1556,29 +1556,138 @@ sample_met &lt;- read.csv(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-m
 #Alex&#39;s supplement found in the paper
 alex_sup &lt;- read_excel(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Shoushtari et al 2022 metadata/Table S1.xlsx&quot;)
 #load TCGA primary
-load(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/02-clinical_data.Rdata&quot;)
+TCGA_clinical &lt;- read_excel(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx&quot;, sheet = 3, skip = 1)
+TCGA_molecule &lt;- read_excel(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx&quot;, sheet = 6,skip = 1)
+TCGA_path1 &lt;- read_excel(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx&quot;, sheet = 4,skip = 1)
+TCGA_path2 &lt;- read_excel(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx&quot;, sheet = 5,skip = 1)
 #mdata
 #cluster info
 load(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/09-de.Rdata&quot;)
 primary.col &lt;- data.frame(colData(tform))
 #Nilsson Data mutation info
-nil_mut &lt;- read_excel(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/List of mutations.xlsx&quot;, col_names = FALSE)
+nil_mut &lt;- read_excel(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/List of mutations.xlsx&quot;,skip = 1)
 #Nilsson et al HLA types
 nil_hla &lt;- read.csv(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/HLA type RNA Optitype.csv&quot;)
 #Nilsson et al sample info
-nil_sample &lt;- read.delim(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/Nilsson.et.al.samples_metadata.tsv&quot;)</code></pre>
+nil_sample &lt;- read.delim(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/Nilsson.et.al.samples_metadata.tsv&quot;)
+nil_site &lt;- read.csv(&quot;/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/Nilsson Table S1.csv&quot;)</code></pre>
+</div>
+<div id="nilsson-et-al-data" class="section level3">
+<h3>Nilsson et al data</h3>
+<div id="mutation-sheet-to-sample---mut---type" class="section level4">
+<h4>Mutation Sheet to Sample - Mut - Type</h4>
+<p>Dictionary for Variant classification</p>
+<pre class="r"><code>var_dict &lt;- c(&quot;Missense_Mutation&quot; = &quot;MIS&quot;,       
+&quot;Splice_Site&quot; = &quot;SPL&quot;,          
+&quot;Nonsense_Mutation&quot; = &quot;NON&quot;,     
+&quot;In_Frame_Del&quot; = &quot;IDEL&quot;,          
+&quot;In_Frame_Ins&quot; = &quot;IIN&quot;,         
+&quot;Translation_Start_Site&quot; = &quot;STS&quot;,
+&quot;Frame_Shift_Del&quot; =&quot;FS&quot;,      
+&quot;Frame_Shift_Ins&quot; =&quot;FS&quot;,       
+&quot;Nonstop_Mutation&quot;  = &quot;NSTP&quot;)
+#mutation table
+nil_mut_sample &lt;- data.frame(matrix(nrow = length(unique(nil_mut$Sample)), ncol = (3 * length(unique(nil_mut$`Hugo symbol`)) + 1)))
+rownames(nil_mut_sample) &lt;- unique(nil_mut$Sample)
+colnames(nil_mut_sample) &lt;- c(unique(nil_mut$`Hugo symbol`), paste(unique(nil_mut$`Hugo symbol`), &quot;_type&quot;, sep=&quot;&quot;), paste(unique(nil_mut$`Hugo symbol`), &quot;_site&quot;, sep=&quot;&quot;) , &quot;Other_mutation&quot;)</code></pre>
+<p>Loop through the mutations and fill into table</p>
+<pre class="r"><code>mutations &lt;- unique(nil_mut$`Hugo symbol`)
+for (i in 1:length(mutations)){
+  this.mut &lt;- mutations[i]
+  mut.type &lt;- paste(this.mut, &quot;_type&quot;, sep=&quot;&quot;)
+  mut.site &lt;- paste(this.mut,&quot;_site&quot;, sep = &quot;&quot;)
+  #subset the org data
+    nil_sub &lt;- subset(nil_mut, `Hugo symbol` == this.mut)
+  #because the table is very long, if there are only 2 samples with that mutation, will just put into other mutation
+  #to make the the annotations consistant, take out the p. in front of mutation type
+  if(nrow(nil_sub) &lt;= 2){
+    col_info_1 &lt;- paste0(this.mut,&quot; &quot;,unlist(gsub(&quot;p\\.&quot;,&quot;&quot;,nil_sub[1,&quot;HGVSp short&quot;])),&quot; &quot;,var_dict[unlist(nil_sub[1,&quot;Variant classification&quot;])],&quot;;&quot;)
+    nil_mut_sample[unlist(nil_sub[1,&quot;Sample&quot;]),&quot;Other_mutation&quot;] &lt;- paste0(nil_mut_sample[unlist(nil_sub[1,&quot;Sample&quot;]),&quot;Other_mutation&quot;], col_info_1)
+    if(nrow(nil_sub) == 2){
+      col_info_2 &lt;- paste0(this.mut,&quot; &quot;,unlist(gsub(&quot;p\\.&quot;,&quot;&quot;,nil_sub[2,&quot;HGVSp short&quot;])),&quot; &quot;,var_dict[unlist(nil_sub[2,&quot;Variant classification&quot;])],&quot;;&quot;)
+      nil_mut_sample[unlist(nil_sub[2,&quot;Sample&quot;]),&quot;Other_mutation&quot;] &lt;- paste0(nil_mut_sample[unlist(nil_sub[2,&quot;Sample&quot;]),&quot;Other_mutation&quot;], col_info_2)}
+    nil_mut_sample &lt;- nil_mut_sample[, -which(colnames(nil_mut_sample) %in% c(this.mut,mut.type,mut.site))]
+  }else{
+    nil_mut_sample[nil_sub$Sample,this.mut] &lt;- &quot;Yes&quot;
+    nil_mut_sample[nil_sub$Sample,mut.site] &lt;- gsub(&quot;p\\.&quot;,&quot;&quot;,nil_sub$`HGVSp short`)
+    nil_mut_sample[nil_sub$Sample,mut.type] &lt;-recode(nil_sub$`Variant classification`,
+                                                     Missense_Mutation = &quot;MIS&quot;,       
+                                                     Splice_Site = &quot;SPL&quot;,          
+                                                     Nonsense_Mutation = &quot;NON&quot;,     
+                                                     In_Frame_Del = &quot;IDEL&quot;,          
+                                                     In_Frame_Ins = &quot;IIN&quot;,         
+                                                     Translation_Start_Site = &quot;STS&quot;,
+                                                     Frame_Shift_Del =&quot;FS&quot;,      
+                                                     Frame_Shift_Ins =&quot;FS&quot;,       
+                                                     Nonstop_Mutation  = &quot;NSTP&quot;)
+  }
+}
+
+#for the actual mutations, yes/no instead of yes/NA
+mut_cols &lt;- str_extract(colnames(nil_mut_sample), &quot;.+_.+&quot;)
+nil_mut_sample[,which(!colnames(nil_mut_sample) %in% mut_cols)] &lt;- ifelse(is.na(nil_mut_sample[,which(!colnames(nil_mut_sample) %in% mut_cols)]), &quot;No&quot;, &quot;Yes&quot;)</code></pre>
+</div>
+<div id="bind-with-hla-information-sample-information" class="section level4">
+<h4>Bind with HLA information &amp; sample information</h4>
+<pre class="r"><code>rownames(nil_hla) &lt;- nil_hla$X
+nil_hla &lt;- nil_hla[, - which(colnames(nil_hla) == &quot;X&quot;)] %&gt;% t(.)
+rownames(nil_sample) &lt;- nil_sample$SAMPLE_ID
+nil_sample &lt;- nil_sample[, - which(colnames(nil_sample) == &quot;SAMPLE_ID&quot;)]
+rownames(nil_site) &lt;- nil_site$Sample.ID
+#adding in the cell line samples
+nilsson_meta &lt;- data.frame(matrix(nrow = nrow(nil_sample), ncol = (ncol(nil_hla)+ncol(nil_mut_sample)+ncol(nil_sample)+1)))
+rownames(nilsson_meta) &lt;- rownames(nil_sample)
+colnames(nilsson_meta) &lt;- c(colnames(nil_sample), colnames(nil_mut_sample),colnames(nil_hla),&quot;Primary_site&quot;)
+#bind to primary site information
+for(i in 1:nrow(nil_sample)){
+  #if there are subscipt out of bound, then put NA for those cols
+  tryCatch(
+    {
+      nilsson_meta[i,colnames(nil_mut_sample)] &lt;- nil_mut_sample[nil_sample[i,&quot;SUBJECT_ID&quot;],]
+      },error = function(cond){
+      nilsson_meta[i,colnames(nil_mut_sample)] &lt;- NA
+    }
+  )
+    tryCatch(
+    {
+      nilsson_meta[i,colnames(nil_hla)] &lt;- nil_hla[nil_sample[i,&quot;SUBJECT_ID&quot;],]
+      },error = function(cond){
+      nilsson_meta[i,colnames(nil_hla)] &lt;- NA
+    }
+  )
+    tryCatch(
+    {
+      nilsson_meta[i,&quot;Primary_site&quot;] &lt;- nil_site[nil_sample[i,&quot;SUBJECT_ID&quot;],&quot;Primary.site&quot;]
+      },error = function(cond){
+      nilsson_meta[i,&quot;Primary_site&quot;] &lt;- NA
+    }
+  )
+  nilsson_meta[i,colnames(nil_sample)] &lt;- nil_sample[i,]
+}
+#remove rep. cols
+nilsson_meta &lt;- nilsson_meta[, !(duplicated(colnames(nilsson_meta)))]
+#replace $NA$ with &quot;NA&quot;
+nilsson_meta[is.na(nilsson_meta)] &lt;- &quot;NA&quot;
+nilsson_meta$Sample &lt;- rownames(nilsson_meta)
+nilsson_meta$Cluster &lt;- rep(&quot;Metastatic&quot;, nrow(nilsson_meta))
+nilsson_meta$Batch &lt;- rep(&quot;Nilsson&quot;, nrow(nilsson_meta))
+colnames(nilsson_meta)[which(colnames(nilsson_meta) == &quot;SEX&quot;)] &lt;- &quot;Sex&quot;
+colnames(nilsson_meta)[which(colnames(nilsson_meta) == &quot;cell_line&quot;)] &lt;- &quot;Cell_line&quot;
+nilsson_meta$Sex &lt;- recode(nilsson_meta$Sex, female = &quot;F&quot;, male = &quot;M&quot;)
+nilsson_meta$toMet &lt;- &quot;Met&quot;</code></pre>
+</div>
 </div>
 <div id="alex-supplement" class="section level3">
 <h3>Alex Supplement:</h3>
 <div id="merge-the-2-datasets-together-rename-the-columes-as-described-in-the-supp-figure." class="section level4">
 <h4>Merge the 2 datasets together, rename the columes as described in
 the supp figure.</h4>
-<pre class="r"><code>colnames(alex_sup) &lt;- c(&quot;Patient_num&quot;,&quot;Age&quot;,&quot;Sex&quot;,&quot;Stage&quot;,&quot;Cell_line&quot;,&quot;Non_liver_met&quot;,&quot;Prior_Therapy&quot;,&quot;liver_embolization&quot;,&quot;LDH_elevation&quot;,&quot;Alkaline_Phosphatase_elevation&quot;,&quot;Mutation&quot;,&quot;3p_loss&quot;,&quot;RECIST_12_weeks&quot;,&quot;Progression_free_survival&quot;,&quot;Overall_survial&quot;,&quot;PD-1_dose_num&quot;,&quot;CTLA-4_dose_num&quot;,&quot;ADI-PEG20_dose_num&quot;,&quot;Dose_Delay_or_skip&quot;,&quot;Delay_or_skip_detail&quot;,&quot;AEs_related_to_therapy&quot;,&quot;AEs_not_related_to_therapy&quot;)
+<pre class="r"><code>colnames(alex_sup) &lt;- c(&quot;Patient_num&quot;,&quot;Age&quot;,&quot;Sex&quot;,&quot;Stage&quot;,&quot;liver_met&quot;,&quot;Non_liver_met&quot;,&quot;Prior_Therapy&quot;,&quot;liver_embolization&quot;,&quot;LDH_elevation&quot;,&quot;Alkaline_Phosphatase_elevation&quot;,&quot;Mutation&quot;,&quot;3p_loss&quot;,&quot;RECIST_12_weeks&quot;,&quot;Progression_free_survival&quot;,&quot;Overall_survial&quot;,&quot;PD-1_dose_num&quot;,&quot;CTLA-4_dose_num&quot;,&quot;ADI-PEG20_dose_num&quot;,&quot;Dose_Delay_or_skip&quot;,&quot;Delay_or_skip_detail&quot;,&quot;AEs_related_to_therapy&quot;,&quot;AEs_not_related_to_therapy&quot;)
 colnames(sample_met) &lt;- c(&quot;Patient&quot;, &quot;IMPACT_ID&quot;,&quot;SK.MEL&quot;,&quot;Date&quot;,&quot;Treatment_stage&quot;, &quot;RECIST_pre_tx&quot;,&quot;Scan_Date&quot;,&quot;Scan_Date_2&quot;, &quot;Frontline&quot;,&quot;RECIST_12_weeks&quot;,&quot;Patient_num&quot;)
 #Months to days
 alex_sup$Overall_survial &lt;- as.numeric(gsub(&quot;\\+&quot;,&quot;&quot;,alex_sup$Overall_survial))*30.4167
 alex_sup$Progression_free_survival &lt;- as.numeric(alex_sup$Progression_free_survival)*30.4167
-alex_sup$Cell_line &lt;- ifelse(alex_sup$Cell_line == &quot;Yes&quot;, &quot;Liver&quot;,&quot;Non-liver&quot;)
+alex_sup$Cell_line &lt;- ifelse(alex_sup$liver_met == &quot;Yes&quot;, &quot;Liver metastasis&quot;,&quot;Non-liver metastasis&quot;)
 sample_met$Patient_num &lt;- gsub(&quot;Patient &quot;,&quot;&quot;,sample_met$Patient_num)</code></pre>
 </div>
 <div id="notes" class="section level4">
@@ -1650,10 +1759,11 @@ for(i in 1:nrow(sample_met)){
   mskcc_meta[i,] &lt;- c(sample_met[i,], alex_sup[which(alex_sup$Patient_num == sample_met[i,&quot;Patient_num&quot;]),])
 }
 #remove rep. cols
-mskcc_meta &lt;- mskcc_meta[, !(duplicated(colnames(mskcc_meta)))]</code></pre>
+mskcc_meta &lt;- mskcc_meta[, !(duplicated(colnames(mskcc_meta)))]
+mskcc_meta$Sex &lt;- recode(mskcc_meta$Sex, Female = &quot;F&quot;, Male = &quot;M&quot;)</code></pre>
 </div>
-<div id="mutation-data" class="section level4">
-<h4>Mutation data</h4>
+<div id="mutation-data-and-cn-information" class="section level4">
+<h4>Mutation data and CN information</h4>
 <pre class="r"><code>var_convertion &lt;- c(&quot;deletion&quot; = &quot;IDEL&quot;, &quot;loss&quot; = &quot;LOSS&quot;,&quot;amp&quot; = &quot;AMP&quot;,&quot;frameshift&quot; = &quot;FS&quot;, &quot;splice&quot; = &quot;SPL&quot;)
 #all mutation info is in sample_meta$Tumor.Alteration.s
 #it is written as mutation*space*mutation site*underscore*(if any)mutation type
@@ -1687,122 +1797,88 @@ rownames(mskcc_meta) &lt;- mskcc_meta$SK.MEL
 colnames(mskcc_meta)[which(colnames(mskcc_meta) == &quot;SK.MEL&quot;)] &lt;- &quot;Sample&quot;
 mskcc_meta$Cluster &lt;- rep(&quot;Metastatic&quot;, nrow(mskcc_meta))
 mskcc_meta$Batch &lt;- rep(&quot;MSKCC&quot;,nrow(mskcc_meta))</code></pre>
-</div>
-</div>
-<div id="nilsson-et-al-data" class="section level3">
-<h3>Nilsson et al data</h3>
-<div id="mutation-sheet-to-sample---mut---type" class="section level4">
-<h4>Mutation Sheet to Sample - Mut - Type</h4>
-<p>Process Table</p>
-<pre class="r"><code>colnames(nil_mut) &lt;- nil_mut[2,]
-nil_mut &lt;- nil_mut[-c(1,2),]</code></pre>
-<p>Dictionary for Variant classification</p>
-<pre class="r"><code>var_dict &lt;- c(&quot;Missense_Mutation&quot; = &quot;MIS&quot;,       
-&quot;Splice_Site&quot; = &quot;SPL&quot;,          
-&quot;Nonsense_Mutation&quot; = &quot;NON&quot;,     
-&quot;In_Frame_Del&quot; = &quot;IDEL&quot;,          
-&quot;In_Frame_Ins&quot; = &quot;IIN&quot;,         
-&quot;Translation_Start_Site&quot; = &quot;STS&quot;,
-&quot;Frame_Shift_Del&quot; =&quot;FS&quot;,      
-&quot;Frame_Shift_Ins&quot; =&quot;FS&quot;,       
-&quot;Nonstop_Mutation&quot;  = &quot;NSTP&quot;)
-#mutation table
-nil_mut_sample &lt;- data.frame(matrix(nrow = length(unique(nil_mut$Sample)), ncol = (3 * length(unique(nil_mut$`Hugo symbol`)) + 1)))
-rownames(nil_mut_sample) &lt;- unique(nil_mut$Sample)
-colnames(nil_mut_sample) &lt;- c(unique(nil_mut$`Hugo symbol`), paste(unique(nil_mut$`Hugo symbol`), &quot;_type&quot;, sep=&quot;&quot;), paste(unique(nil_mut$`Hugo symbol`), &quot;_site&quot;, sep=&quot;&quot;) , &quot;Other_mutation&quot;)</code></pre>
-<p>Loop through the mutations and fill into table</p>
-<pre class="r"><code>mutations &lt;- unique(nil_mut$`Hugo symbol`)
-for (i in 1:length(mutations)){
-  this.mut &lt;- mutations[i]
-  mut.type &lt;- paste(this.mut, &quot;_type&quot;, sep=&quot;&quot;)
-  mut.site &lt;- paste(this.mut,&quot;_site&quot;, sep = &quot;&quot;)
-  #subset the org data
-    nil_sub &lt;- subset(nil_mut, `Hugo symbol` == this.mut)
-  #because the table is very long, if there are only 2 samples with that mutation, will just put into other mutation
-  #to make the the annotations consistant, take out the p. in front of mutation type
-  if(nrow(nil_sub) &lt;= 2){
-    col_info_1 &lt;- paste0(this.mut,&quot; &quot;,unlist(gsub(&quot;p\\.&quot;,&quot;&quot;,nil_sub[1,&quot;HGVSp short&quot;])),&quot; &quot;,var_dict[unlist(nil_sub[1,&quot;Variant classification&quot;])],&quot;;&quot;)
-    nil_mut_sample[unlist(nil_sub[1,&quot;Sample&quot;]),&quot;Other_mutation&quot;] &lt;- paste0(nil_mut_sample[unlist(nil_sub[1,&quot;Sample&quot;]),&quot;Other_mutation&quot;], col_info_1)
-    if(nrow(nil_sub) == 2){
-      col_info_2 &lt;- paste0(this.mut,&quot; &quot;,unlist(gsub(&quot;p\\.&quot;,&quot;&quot;,nil_sub[2,&quot;HGVSp short&quot;])),&quot; &quot;,var_dict[unlist(nil_sub[2,&quot;Variant classification&quot;])],&quot;;&quot;)
-      nil_mut_sample[unlist(nil_sub[2,&quot;Sample&quot;]),&quot;Other_mutation&quot;] &lt;- paste0(nil_mut_sample[unlist(nil_sub[2,&quot;Sample&quot;]),&quot;Other_mutation&quot;], col_info_2)}
-    nil_mut_sample &lt;- nil_mut_sample[, -which(colnames(nil_mut_sample) %in% c(this.mut,mut.type,mut.site))]
-  }else{
-    nil_mut_sample[nil_sub$Sample,this.mut] &lt;- &quot;Yes&quot;
-    nil_mut_sample[nil_sub$Sample,mut.site] &lt;- gsub(&quot;p\\.&quot;,&quot;&quot;,nil_sub$`HGVSp short`)
-    nil_mut_sample[nil_sub$Sample,mut.type] &lt;-recode(nil_sub$`Variant classification`,
-                                                     Missense_Mutation = &quot;MIS&quot;,       
-                                                     Splice_Site = &quot;SPL&quot;,          
-                                                     Nonsense_Mutation = &quot;NON&quot;,     
-                                                     In_Frame_Del = &quot;IDEL&quot;,          
-                                                     In_Frame_Ins = &quot;IIN&quot;,         
-                                                     Translation_Start_Site = &quot;STS&quot;,
-                                                     Frame_Shift_Del =&quot;FS&quot;,      
-                                                     Frame_Shift_Ins =&quot;FS&quot;,       
-                                                     Nonstop_Mutation  = &quot;NSTP&quot;)
-  }
-}
-
-#for the actual mutations, yes/no instead of yes/NA
-mut_cols &lt;- str_extract(colnames(nil_mut_sample), &quot;.+_.+&quot;)
-nil_mut_sample[,which(!colnames(nil_mut_sample) %in% mut_cols)] &lt;- ifelse(is.na(nil_mut_sample[,which(!colnames(nil_mut_sample) %in% mut_cols)]), &quot;No&quot;, &quot;Yes&quot;)</code></pre>
-</div>
-<div id="bind-with-hla-information-sample-information" class="section level4">
-<h4>Bind with HLA information &amp; sample information</h4>
-<pre class="r"><code>rownames(nil_hla) &lt;- nil_hla$X
-nil_hla &lt;- nil_hla[, - which(colnames(nil_hla) == &quot;X&quot;)] %&gt;% t(.)
-rownames(nil_sample) &lt;- nil_sample$SAMPLE_ID
-nil_sample &lt;- nil_sample[, - which(colnames(nil_sample) == &quot;SAMPLE_ID&quot;)]
-#adding in the cell line samples
-nilsson_meta &lt;- data.frame(matrix(nrow = nrow(nil_sample), ncol = (ncol(nil_hla)+ncol(nil_mut_sample)+ncol(nil_sample))))
-rownames(nilsson_meta) &lt;- rownames(nil_sample)
-colnames(nilsson_meta) &lt;- c(colnames(nil_sample), colnames(nil_mut_sample),colnames(nil_hla))
-for(i in 1:nrow(nil_sample)){
-  nilsson_meta[i,] &lt;- c(nil_sample[i,], nil_mut_sample[which(rownames(nil_mut_sample) == nil_sample[i,&quot;SUBJECT_ID&quot;]),], nil_hla[which(rownames(nil_hla) == nil_sample[i,&quot;SUBJECT_ID&quot;]),])
-}
-#remove rep. cols
-nilsson_meta &lt;- nilsson_meta[, !(duplicated(colnames(nilsson_meta)))]
-#replace $NA$ with &quot;NA&quot;
-nilsson_meta[is.na(nilsson_meta)] &lt;- &quot;NA&quot;
-nilsson_meta$Sample &lt;- rownames(nilsson_meta)
-nilsson_meta$Cluster &lt;- rep(&quot;Metastatic&quot;, nrow(nilsson_meta))
-nilsson_meta$Batch &lt;- rep(&quot;Nilsson&quot;, nrow(nilsson_meta))
-colnames(nilsson_meta)[which(colnames(nilsson_meta) == &quot;SEX&quot;)] &lt;- &quot;Sex&quot;</code></pre>
+<p>CN: There are only 2 for mskcc: 3p loss and 8q AMP</p>
+<pre class="r"><code>mskcc_meta$`3p` &lt;- mskcc_meta$`3p_loss`
+mskcc_meta$`3p_type` &lt;- recode(mskcc_meta$`3p_loss`, Yes = &quot;LOSS&quot;, No = &quot;REG&quot;, Unknown = &quot;UN&quot;)
+mskcc_meta$toMet &lt;- &quot;Met&quot;</code></pre>
 </div>
 </div>
 <div id="primary-tcga-samples" class="section level3">
 <h3>Primary (TCGA) samples</h3>
-<div id="rearrage-so-that-the-primary-separates-out-by-hc-clusters-separate-out-the-mutation-information" class="section level4">
-<h4>Rearrage so that the primary separates out by HC clusters; Separate
-out the mutation information</h4>
-<pre class="r"><code>#all the mutation info in mdata
-mut_list &lt;- c(&quot;GNAQ&quot;,&quot;GNA11&quot;,&quot;CYSLTR2&quot;,&quot;PLCB4&quot;,&quot;EIF1AX&quot;,&quot;SF3B1&quot;,&quot;SRSF2&quot;,&quot;BAP1&quot;,&quot;E2F3&quot;,&quot;MYC&quot;,&quot;PVT1&quot;)
-for (i in 1:length(mut_list)){
-  this.mut &lt;- mut_list[i]
-  #from the code of Matthew, only BAP1 mutations are classified type, all others are sites
-  if(this.mut == &quot;BAP1&quot;){
-    mut.type &lt;- paste(this.mut,&quot;_type&quot;, sep = &quot;&quot;)
-    mdata[,mut.type] &lt;- mdata[,this.mut]
+<p>Proper Colnames for the clinical data</p>
+<pre class="r"><code>my_samples &lt;- str_extract(TCGA_clinical$...1,&quot;TCGA.+&quot;) %&gt;% na.omit(.)
+TCGA_clinical_data &lt;- TCGA_clinical[which(TCGA_clinical$...1 %in% my_samples),]
+colnames(TCGA_clinical_data)[1:2] &lt;- TCGA_clinical[2,1:2] 
+colnames(TCGA_clinical_data) &lt;- gsub(&quot;Pathology Review:\\s?\r\n\\s?|\\(|\\)&quot;,&quot;&quot;,colnames(TCGA_clinical_data)) %&gt;% gsub(&quot;\\s&quot;,&quot;_&quot;,.)
+colnames(TCGA_molecule) &lt;-gsub(&quot;\\(.+\\)&quot;,&quot;&quot;,colnames(TCGA_molecule)) %&gt;% gsub(&quot;\\s&quot;,&quot;_&quot;,.)
+colnames(TCGA_path1)&lt;-gsub(&quot;\\(.+\\)&quot;,&quot;&quot;,colnames(TCGA_path1)) %&gt;% gsub(&quot;\\s&quot;,&quot;_&quot;,.)
+colnames(TCGA_path2)&lt;-gsub(&quot;\\(.+\\)&quot;,&quot;&quot;,colnames(TCGA_path1)) %&gt;% gsub(&quot;\\s&quot;,&quot;_&quot;,.)
+rownames(TCGA_clinical_data) &lt;- TCGA_clinical_data$Patient_ID</code></pre>
+<pre><code>## Warning: Setting row names on a tibble is deprecated.</code></pre>
+<pre class="r"><code>rownames(TCGA_molecule) &lt;- TCGA_molecule$Patient_ID</code></pre>
+<pre><code>## Warning: Setting row names on a tibble is deprecated.</code></pre>
+<pre class="r"><code>rownames(TCGA_path1) &lt;- TCGA_path1$Patient_ID</code></pre>
+<pre><code>## Warning: Setting row names on a tibble is deprecated.</code></pre>
+<pre class="r"><code>rownames(TCGA_path1) &lt;- TCGA_path1$Patient_ID</code></pre>
+<pre><code>## Warning: Setting row names on a tibble is deprecated.</code></pre>
+<pre class="r"><code>TCGA_meta &lt;- cbind(TCGA_clinical_data,TCGA_molecule[rownames(TCGA_clinical_data),],TCGA_path1[rownames(TCGA_clinical_data),], TCGA_path2[rownames(TCGA_clinical_data),])
+TCGA_meta&lt;- TCGA_meta[, !(duplicated(colnames(TCGA_meta)))]</code></pre>
+<div id="mutation-and-cn-information" class="section level4">
+<h4>Mutation and CN information</h4>
+<pre class="r"><code>#for CN, here are the pulled CN information using which(!is.na(str_extract(colnames(TCGA_pulled), &quot;.?CN|copy_number.?&quot;)))
+CN_list &lt;- c(&quot;1p&quot;,&quot;3&quot;,&quot;8q&quot;,&quot;6p&quot;,&quot;JARID2&quot;,&quot;6q&quot;,&quot;E2F3&quot;,&quot;MYC&quot;,&quot;PVT1&quot;,&quot;RAF1&quot;)
+for (i in 1:length(CN_list)){
+  this.CN &lt;- CN_list[i]
+  #locate this column
+  if(isTRUE(this.CN %in% colnames(TCGA_meta))){
+    TCGA_meta[,this.CN] &lt;- gsub(&quot;\\;&quot;,&quot;&quot;,TCGA_meta[,this.CN])
   }else{
-    mut.site &lt;- paste(this.mut,&quot;_site&quot;,sep = &quot;&quot;)
-    mdata[,mut.site] &lt;- mdata[,this.mut]
-    mdata[,mut.site] &lt;-gsub(&quot;\\;&quot;,&quot;&quot;,mdata[,mut.site])
+    cn_col &lt;- which(!is.na(str_extract(colnames(TCGA_meta),paste(this.CN,&quot;_.+&quot;,sep = &quot;&quot;))))[1]
+    colnames(TCGA_meta)[cn_col] &lt;- paste(this.CN,&quot;_CN&quot;,sep=&quot;&quot;)
+    TCGA_meta[,this.CN] &lt;- ifelse(TCGA_meta[cn_col] &gt; 2, &quot;AMP&quot;, ifelse(TCGA_meta[cn_col] == 2,&quot;REG&quot;,ifelse(TCGA_meta[cn_col] &lt; 2, &quot;LOSS&quot;, &quot;UN&quot;)))
+    colnames(TCGA_meta)[ncol(TCGA_meta)] &lt;- this.CN
   }
-  mdata[,this.mut] &lt;- ifelse((mdata[,this.mut] == &quot;NA&quot; | mdata[,this.mut] == &quot;&quot; | is.na(mdata[,this.mut])), &quot;No&quot;, &quot;Yes&quot;)
+}
+
+#use the nilsson et al. mut list for a thorough list of mutations
+for (i in 1:length(mutations)){
+  this.mut &lt;- mutations[i]
+  if(isTRUE(this.mut %in% colnames(TCGA_meta))){
+    if(this.mut == &quot;BAP1&quot;){
+      mut.type &lt;- paste(this.mut, &quot;_type&quot;,sep=&quot;&quot;)
+      TCGA_meta[,mut.type] &lt;- recode(TCGA_meta[,this.mut],
+                                     splicing_variant = &quot;SPL&quot;,
+                                     frameshift_variant =&quot;FS&quot;,
+                                     &quot;NA&quot; = &quot;NA&quot;,
+                                     nonsense = &quot;NON&quot;,
+                                     homozygous_deletion = &quot;HDEL&quot;,
+                                     missense_variant = &quot;MIS&quot;,
+                                     inframe_deletion = &quot;IDEL&quot;)
+    }else{
+      mut.site &lt;- paste(this.mut,&quot;_site&quot;,sep = &quot;&quot;)
+      TCGA_meta[,mut.site] &lt;- TCGA_meta[,this.mut]
+    }
+    TCGA_meta[,this.mut] &lt;- ifelse(TCGA_meta[,this.mut] == &quot;NA&quot;,&quot;No&quot;,&quot;Yes&quot;)
+  }
 }
 #take out the cibersort results from prev analysis
-out_columns &lt;- colnames(mdata)[!is.na(str_extract(colnames(mdata),&quot;mut\\..+|.+\\.cell.+|^NA.|.+phil.+|.+cyte.+|.+phage.+&quot;))]
-mdata &lt;- mdata[,-which(colnames(mdata) %in% out_columns)]
-colnames(mdata)[which(colnames(mdata) == &quot;gender&quot;)] &lt;- &quot;Sex&quot;
-colnames(mdata)[which(colnames(mdata) == &quot;stage&quot;)] &lt;- &quot;Stage&quot;
-colnames(mdata)[which(colnames(mdata) == &quot;time_to_death&quot;)] &lt;- &quot;Overall_survival&quot;
-colnames(mdata)[which(colnames(mdata) == &quot;sample_id&quot;)] &lt;- &quot;Sample&quot;
-mdata[is.na(mdata)] &lt;- &quot;NA&quot;
-TCGA_meta &lt;- mdata %&gt;% mutate(across(everything(), ~ifelse(.==&quot;  &quot;, &quot;NA&quot;, as.character(.))))</code></pre>
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == &quot;Gender&quot;)] &lt;- &quot;Sex&quot;
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == &quot;Age_at_Diagnosis&quot; )] &lt;- &quot;Age&quot;
+TCGA_meta$Sex &lt;- recode(TCGA_meta$Sex, Male = &quot;M&quot;, Female = &quot;F&quot;)
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == &quot;Patient_ID&quot;)] &lt;- &quot;Sample&quot;
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == &quot;AJCC_Clinical_Stage&quot;)] &lt;- &quot;Stage&quot;
+TCGA_meta$Stage &lt;- gsub(&quot;Stage &quot;,&quot;&quot;, TCGA_meta$Stage)
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == &quot;Tumor_Location&quot;)] &lt;- &quot;Cell_line&quot;
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == &quot;Distant_Metastasis&quot;)] &lt;- &quot;toMet&quot;
+TCGA_meta[is.na(TCGA_meta)] &lt;- &quot;NA&quot;
+TCGA_meta$Batch &lt;- &quot;TCGA Primary&quot;
+TCGA_meta &lt;- TCGA_meta %&gt;% mutate(across(everything(), ~ifelse(.==&quot;  &quot;, &quot;NA&quot;, as.character(.))))
+rownames(TCGA_meta) &lt;-TCGA_meta$Sample</code></pre>
 </div>
 <div id="adding-in-cluster-information" class="section level4">
 <h4>Adding in cluster information</h4>
-<pre class="r"><code>TCGA_meta[rownames(primary.col),&quot;Cluster&quot;] &lt;- primary.col[,&quot;clust.herv&quot;]</code></pre>
+<pre class="r"><code>rownames(primary.col) &lt;- primary.col$case_id
+TCGA_meta[,&quot;Cluster&quot;] &lt;- primary.col[rownames(TCGA_meta),&quot;clust.herv&quot;]</code></pre>
 </div>
 </div>
 <div id="merge-all-metadata-together" class="section level3">
@@ -1819,54 +1895,54 @@ metastatic_meta &lt;- rbind(nilsson_meta[,mets_cols],mskcc_meta[,mets_cols])</co
 <div id="displaying-metastatic-metadata" class="section level4">
 <h4>Displaying Metastatic Metadata</h4>
 <pre class="r"><code>metastatic_meta[1:10,]</code></pre>
-<pre><code>##      Sample    Sex GNA11_site GNA11 BAP1_type   BAP1_site BAP1 GNAQ_site GNAQ
-## UM1     UM1   male      Q209L   Yes       NON       Q156*  Yes        NA   No
-## UM2     UM2   male      Q209L   Yes       NON       R385*  Yes        NA   No
-## UM3     UM3 female      Q209L   Yes       NON        R60*  Yes        NA   No
-## UM4     UM4   male      Q209L   Yes        NA          NA   No        NA   No
-## UM5     UM5 female      Q209L   Yes        FS  S558Afs*13  Yes        NA   No
-## UM6     UM6 female      Q209L   Yes        NA          NA   No        NA   No
-## UM7     UM7 female      Q209L   Yes      IDEL   E7_S10del  Yes        NA   No
-## UM8     UM8 female      Q209L   Yes        NA          NA   No        NA   No
-## UM9     UM9   male      Q209L   Yes       SPL X126_splice  Yes        NA   No
-## UM10   UM10   male      Q209L   Yes       MIS        T16P  Yes        NA   No
-##      SF3B1_site SF3B1 GNA11_type    Cluster   Batch
-## UM1          NA    No        MIS Metastatic Nilsson
-## UM2          NA    No        MIS Metastatic Nilsson
-## UM3          NA    No        MIS Metastatic Nilsson
-## UM4       R625H   Yes        MIS Metastatic Nilsson
-## UM5          NA    No        MIS Metastatic Nilsson
-## UM6          NA    No        MIS Metastatic Nilsson
-## UM7          NA    No        MIS Metastatic Nilsson
-## UM8          NA    No        MIS Metastatic Nilsson
-## UM9          NA    No        MIS Metastatic Nilsson
-## UM10         NA    No        MIS Metastatic Nilsson</code></pre>
+<pre><code>##      Sample Sex               Cell_line GNA11_site GNA11 BAP1_type   BAP1_site
+## UM1     UM1   M        Liver metastasis      Q209L   Yes       NON       Q156*
+## UM2     UM2   M        Liver metastasis      Q209L   Yes       NON       R385*
+## UM3     UM3   F        Liver metastasis      Q209L   Yes       NON        R60*
+## UM4     UM4   M        Liver metastasis      Q209L   Yes        NA          NA
+## UM5     UM5   F        Liver metastasis      Q209L   Yes        FS  S558Afs*13
+## UM6     UM6   F Subcutaneous metastasis      Q209L   Yes        NA          NA
+## UM7     UM7   F Subcutaneous metastasis      Q209L   Yes      IDEL   E7_S10del
+## UM8     UM8   F        Liver metastasis      Q209L   Yes        NA          NA
+## UM9     UM9   M        Liver metastasis      Q209L   Yes       SPL X126_splice
+## UM10   UM10   M        Liver metastasis      Q209L   Yes       MIS        T16P
+##      BAP1 GNAQ_site GNAQ SF3B1_site SF3B1 GNA11_type    Cluster   Batch toMet
+## UM1   Yes        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM2   Yes        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM3   Yes        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM4    No        NA   No      R625H   Yes        MIS Metastatic Nilsson   Met
+## UM5   Yes        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM6    No        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM7   Yes        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM8    No        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM9   Yes        NA   No         NA    No        MIS Metastatic Nilsson   Met
+## UM10  Yes        NA   No         NA    No        MIS Metastatic Nilsson   Met</code></pre>
 </div>
 <div id="all-merged-metadata" class="section level4">
 <h4>All Merged Metadata</h4>
 <pre class="r"><code>metadata_all[1:10,]</code></pre>
-<pre><code>##                            Sample    Sex GNA11_site GNA11 BAP1_type BAP1
-## TCGA-V4-A9E5-01A TCGA-V4-A9E5-01A Female         NA    No        NA   No
-## TCGA-WC-AA9E-01A TCGA-WC-AA9E-01A   Male      R166H   Yes        NA   No
-## TCGA-VD-A8K7-01B TCGA-VD-A8K7-01B   Male         NA    No        NA   No
-## TCGA-V4-A9EJ-01A TCGA-V4-A9EJ-01A   Male      Q209L   Yes        NA   No
-## TCGA-VD-A8KM-01A TCGA-VD-A8KM-01A   Male         NA    No        NA   No
-## TCGA-VD-A8KB-01A TCGA-VD-A8KB-01A Female         NA    No        NA   No
-## TCGA-VD-A8KA-01B TCGA-VD-A8KA-01B   Male      Q209L   Yes        NA   No
-## TCGA-YZ-A983-01A TCGA-YZ-A983-01A Female         NA    No        NA   No
-## TCGA-V4-A9F1-01A TCGA-V4-A9F1-01A Female         NA    No       NON  Yes
-## TCGA-V4-A9ED-01A TCGA-V4-A9ED-01A   Male         NA    No       SPL  Yes
-##                  GNAQ_site GNAQ SF3B1_site SF3B1 Cluster
-## TCGA-V4-A9E5-01A     Q209P  Yes      K666T   Yes      C2
-## TCGA-WC-AA9E-01A     Q209L  Yes      R625H   Yes      C1
-## TCGA-VD-A8K7-01B     Q209L  Yes         NA    No      C1
-## TCGA-V4-A9EJ-01A        NA   No      R625H   Yes      C2
-## TCGA-VD-A8KM-01A     Q209P  Yes         NA    No      C4
-## TCGA-VD-A8KB-01A     Q209P  Yes      R625C   Yes      C1
-## TCGA-VD-A8KA-01B        NA   No      R625C   Yes      C1
-## TCGA-YZ-A983-01A     Q209P  Yes         NA    No      C1
-## TCGA-V4-A9F1-01A     Q209P  Yes         NA    No      C4
-## TCGA-V4-A9ED-01A        NA   No         NA    No      C3</code></pre>
+<pre><code>##                    Sample Sex            Cell_line GNA11_site GNA11 BAP1_type
+## TCGA-RZ-AB0B TCGA-RZ-AB0B   F Choroid|Ciliary body      Q209L   Yes       SPL
+## TCGA-V3-A9ZX TCGA-V3-A9ZX   M Choroid|Ciliary body      Q209L   Yes       SPL
+## TCGA-V3-A9ZY TCGA-V3-A9ZY   M              Choroid      Q209L   Yes        NA
+## TCGA-V4-A9E5 TCGA-V4-A9E5   F              Choroid         NA    No        NA
+## TCGA-V4-A9E7 TCGA-V4-A9E7   M              Choroid         NA    No       SPL
+## TCGA-V4-A9E8 TCGA-V4-A9E8   M              Choroid      Q209L   Yes        FS
+## TCGA-V4-A9E9 TCGA-V4-A9E9   M              Choroid         NA    No        NA
+## TCGA-V4-A9EA TCGA-V4-A9EA   M              Choroid         NA    No        NA
+## TCGA-V4-A9EC TCGA-V4-A9EC   F              Choroid         NA    No        NA
+## TCGA-V4-A9ED TCGA-V4-A9ED   M Choroid|Ciliary body         NA    No       SPL
+##              BAP1 GNAQ_site GNAQ SF3B1_site SF3B1 Cluster        Batch toMet
+## TCGA-RZ-AB0B  Yes        NA   No         NA    No      C4 TCGA Primary   Yes
+## TCGA-V3-A9ZX  Yes        NA   No         NA    No      C4 TCGA Primary   Yes
+## TCGA-V3-A9ZY   No        NA   No         NA    No      C2 TCGA Primary    No
+## TCGA-V4-A9E5   No     Q209P  Yes      K666T   Yes      C2 TCGA Primary    No
+## TCGA-V4-A9E7  Yes     Q209L  Yes         NA    No      C3 TCGA Primary   Yes
+## TCGA-V4-A9E8  Yes        NA   No         NA    No      C3 TCGA Primary   Yes
+## TCGA-V4-A9E9   No     Q209P  Yes      R625H   Yes      C2 TCGA Primary    No
+## TCGA-V4-A9EA   No     Q209L  Yes      R625C   Yes      C2 TCGA Primary    No
+## TCGA-V4-A9EC   No     Q209P  Yes      T663P   Yes      C2 TCGA Primary    No
+## TCGA-V4-A9ED  Yes        NA   No         NA    No      C3 TCGA Primary    No</code></pre>
 </div>
 </div>
 

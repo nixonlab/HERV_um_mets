@@ -52,119 +52,21 @@ sample_met <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.corne
 #Alex's supplement found in the paper
 alex_sup <- read_excel("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Shoushtari et al 2022 metadata/Table S1.xlsx")
 #load TCGA primary
-load("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/02-clinical_data.Rdata")
+TCGA_clinical <- read_excel("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx", sheet = 3, skip = 1)
+TCGA_molecule <- read_excel("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx", sheet = 6,skip = 1)
+TCGA_path1 <- read_excel("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx", sheet = 4,skip = 1)
+TCGA_path2 <- read_excel("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/TCGA Meta/tcga S2.xlsx", sheet = 5,skip = 1)
 #mdata
 #cluster info
 load("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/09-de.Rdata")
 primary.col <- data.frame(colData(tform))
 #Nilsson Data mutation info
-nil_mut <- read_excel("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/List of mutations.xlsx", col_names = FALSE)
+nil_mut <- read_excel("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/List of mutations.xlsx",skip = 1)
 #Nilsson et al HLA types
 nil_hla <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/HLA type RNA Optitype.csv")
 #Nilsson et al sample info
 nil_sample <- read.delim("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/Nilsson.et.al.samples_metadata.tsv")
-```
-
-### Alex Supplement: 
-
-#### Merge the 2 datasets together, rename the columes as described in the supp figure. 
-
-```{r}
-colnames(alex_sup) <- c("Patient_num","Age","Sex","Stage","Cell_line","Non_liver_met","Prior_Therapy","liver_embolization","LDH_elevation","Alkaline_Phosphatase_elevation","Mutation","3p_loss","RECIST_12_weeks","Progression_free_survival","Overall_survial","PD-1_dose_num","CTLA-4_dose_num","ADI-PEG20_dose_num","Dose_Delay_or_skip","Delay_or_skip_detail","AEs_related_to_therapy","AEs_not_related_to_therapy")
-colnames(sample_met) <- c("Patient", "IMPACT_ID","SK.MEL","Date","Treatment_stage", "RECIST_pre_tx","Scan_Date","Scan_Date_2", "Frontline","RECIST_12_weeks","Patient_num")
-#Months to days
-alex_sup$Overall_survial <- as.numeric(gsub("\\+","",alex_sup$Overall_survial))*30.4167
-alex_sup$Progression_free_survival <- as.numeric(alex_sup$Progression_free_survival)*30.4167
-alex_sup$Cell_line <- ifelse(alex_sup$Cell_line == "Yes", "Liver","Non-liver")
-sample_met$Patient_num <- gsub("Patient ","",sample_met$Patient_num)
-```
-
-#### Notes:
-
-PFS = Progression-Free Survival
-
-[Pilot Trial of Arginine Deprivation Plus Nivolumab and Ipilimumab in Patients with Metastatic Uveal Melanoma](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9179243/)
-
-[RECIST Classification](https://www.cibmtr.org/DataManagement/TrainingReference/Manuals/DataManagement/Documents/appendix-n.pdf):
-
-#### Response Evaluation Crteria in Solid Tumors
-
-**SD** = Stable Disease (NR/SD) - neither sufficeint shrinkage to qualify for partial response nor sufficient increase to qualify for progressive disease (PD)
-
-**PD** = Progressive Disease - A 20% or greater increase in the sum of the longest diameter of measured lesions.
-
-[Cancer Stages](https://www.cancer.net/cancer-types/melanoma/stages#:~:text=Stage%20IV%20is%20further%20evaluated,involve%20the%20central%20nervous%20system.)
-
-#### Stage groups for melanoma
-
-**Stage 0**: This refers to melanoma in situ, which means melanoma cells are found only in the outer layer of skin or epidermis. This stage of melanoma is very unlikely to spread to other parts of the body.The melanoma has not spread to any lymph nodes.
-
-**Stage I**: The primary melanoma is still only in the skin and is relatively thin. Stage I is divided into 2 subgroups, IA or IB, depending on the thickness of the melanoma and whether a pathologist sees ulceration under a microscope. The melanoma has not spread to any lymph nodes.
-
-**Stage II**: Stage II melanoma is thicker than stage I melanoma, extending through the epidermis and further into the dermis, the dense inner layer of the skin. The melanoma has not spread to any lymph nodes, but it has a higher chance of spreading. Stage II is divided into 3 subgroups—A, B, or C—depending on how thick the melanoma is and whether there is ulceration.
-
-**Stage III**: Stage III melanoma has spread locally or through the lymphatic system to a regional lymph node located near where the cancer started or to a skin site on the way to a lymph node, called in-transit metastasis, satellite metastasis, or microsatellite disease. The lymphatic system is part of the immune system and drains fluid from body tissues through a series of tubes or vessels. Stage III is divided into 4 subgroups—A, B, C, or D—depending on the thickness of the tumor, the size and number of lymph nodes involved with melanoma, whether the primary tumor has satellite or in-transit lesions, and if it appears ulcerated under a microscope.
-
-**Stage IV**: This stage describes melanoma that has spread through the bloodstream to other parts of the body, such as distant locations on the skin or soft tissue, distant lymph nodes, or other organs like the lung, liver, brain, bone, or gastrointestinal tract. 
-
-**Metastatic Stage**:
-
-*M1a*: The cancer has only spread to distant skin and/or soft-tissue sites.
-
-*M1b*: The cancer has spread to the lung.
-
-*M1c*: The cancer has spread to any other location that does not involve the central nervous system.
-
-*M1d*: The cancer has spread to the central nervous system, including the brain, spinal cord, and/or cerebrospinal fluid, or lining of the brain and/or spinal cord.
-
-#### Create a combined table for MSKCC samples 
-
-```{r}
-mskcc_meta <- data.frame(matrix(nrow = nrow(sample_met), ncol = (ncol(alex_sup)+ncol(sample_met))))
-colnames(mskcc_meta) <- c(colnames(sample_met), colnames(alex_sup))
-for(i in 1:nrow(sample_met)){
-  mskcc_meta[i,] <- c(sample_met[i,], alex_sup[which(alex_sup$Patient_num == sample_met[i,"Patient_num"]),])
-}
-#remove rep. cols
-mskcc_meta <- mskcc_meta[, !(duplicated(colnames(mskcc_meta)))]
-```
-
-#### Mutation data
-
-```{r}
-var_convertion <- c("deletion" = "IDEL", "loss" = "LOSS","amp" = "AMP","frameshift" = "FS", "splice" = "SPL")
-#all mutation info is in sample_meta$Tumor.Alteration.s
-#it is written as mutation*space*mutation site*underscore*(if any)mutation type
-mut_list <- c()
-for (i in 1:nrow(mskcc_meta)){
-  mutation_info<- unlist(str_split(mskcc_meta[i,"Mutation"],"; "))
-  for (j in 1:length(mutation_info)){
-    #mutation name
-    mut_info <- unlist(str_split(mutation_info[j]," "))
-    this.mut <- mut_info[1]
-    #add mutation into list (for yes/no id later)
-    mut_list <- append(mut_list,this.mut)
-    #contains a mut.type
-    if(!is.na(str_extract(mutation_info[j], paste(names(var_convertion),collapse = "|")))){
-      mut.type <- var_convertion[str_extract(mutation_info[j], paste(names(var_convertion),collapse = "|"))]
-      mut.type.name <- paste(this.mut,"_type",sep = "")
-      mskcc_meta[i,mut.type.name] <- mut.type
-    }
-    #take out the type information
-    mut.site <- gsub("_.+","",mut_info[2]) %>% gsub(paste(names(var_convertion),collapse = "|"), "", .)
-    if(mut.site!=""){
-      mut.site.name <- paste(this.mut,"_site",sep = "")
-      mskcc_meta[i,mut.site.name] <- mut.site
-    }
-    mskcc_meta[i,this.mut] <- "Yes"
-    }
-}
-mskcc_meta[,unique(mut_list)] <- ifelse(is.na(mskcc_meta[,unique(mut_list)]), "No","Yes")
-mskcc_meta[is.na(mskcc_meta)] <- "NA"
-rownames(mskcc_meta) <- mskcc_meta$SK.MEL
-colnames(mskcc_meta)[which(colnames(mskcc_meta) == "SK.MEL")] <- "Sample"
-mskcc_meta$Cluster <- rep("Metastatic", nrow(mskcc_meta))
-mskcc_meta$Batch <- rep("MSKCC",nrow(mskcc_meta))
+nil_site <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Nilsson et al metadata/Nilsson Table S1.csv")
 ```
 
 
@@ -172,11 +74,6 @@ mskcc_meta$Batch <- rep("MSKCC",nrow(mskcc_meta))
 
 #### Mutation Sheet to Sample - Mut - Type
 
-Process Table
-```{r}
-colnames(nil_mut) <- nil_mut[2,]
-nil_mut <- nil_mut[-c(1,2),]
-```
 
 Dictionary for Variant classification
 ```{r}
@@ -241,12 +138,37 @@ rownames(nil_hla) <- nil_hla$X
 nil_hla <- nil_hla[, - which(colnames(nil_hla) == "X")] %>% t(.)
 rownames(nil_sample) <- nil_sample$SAMPLE_ID
 nil_sample <- nil_sample[, - which(colnames(nil_sample) == "SAMPLE_ID")]
+rownames(nil_site) <- nil_site$Sample.ID
 #adding in the cell line samples
-nilsson_meta <- data.frame(matrix(nrow = nrow(nil_sample), ncol = (ncol(nil_hla)+ncol(nil_mut_sample)+ncol(nil_sample))))
+nilsson_meta <- data.frame(matrix(nrow = nrow(nil_sample), ncol = (ncol(nil_hla)+ncol(nil_mut_sample)+ncol(nil_sample)+2)))
 rownames(nilsson_meta) <- rownames(nil_sample)
-colnames(nilsson_meta) <- c(colnames(nil_sample), colnames(nil_mut_sample),colnames(nil_hla))
+colnames(nilsson_meta) <- c(colnames(nil_sample), colnames(nil_mut_sample),colnames(nil_hla),"Primary_site","Age")
+#bind to primary site information
 for(i in 1:nrow(nil_sample)){
-  nilsson_meta[i,] <- c(nil_sample[i,], nil_mut_sample[which(rownames(nil_mut_sample) == nil_sample[i,"SUBJECT_ID"]),], nil_hla[which(rownames(nil_hla) == nil_sample[i,"SUBJECT_ID"]),])
+  #if there are subscipt out of bound, then put NA for those cols
+  tryCatch(
+    {
+      nilsson_meta[i,colnames(nil_mut_sample)] <- nil_mut_sample[nil_sample[i,"SUBJECT_ID"],]
+      },error = function(cond){
+      nilsson_meta[i,colnames(nil_mut_sample)] <- NA
+    }
+  )
+    tryCatch(
+    {
+      nilsson_meta[i,colnames(nil_hla)] <- nil_hla[nil_sample[i,"SUBJECT_ID"],]
+      },error = function(cond){
+      nilsson_meta[i,colnames(nil_hla)] <- NA
+    }
+  )
+    tryCatch(
+    {
+      nilsson_meta[i,"Primary_site"] <- nil_site[nil_sample[i,"SUBJECT_ID"],"Primary.site"]
+      nilsson_meta[i,"Age"] <- nil_site[nil_sample[i,"SUBJECT_ID"],"Age"]
+      },error = function(cond){
+      nilsson_meta[i,"Primary_site"] <- NA
+    }
+  )
+  nilsson_meta[i,colnames(nil_sample)] <- nil_sample[i,]
 }
 #remove rep. cols
 nilsson_meta <- nilsson_meta[, !(duplicated(colnames(nilsson_meta)))]
@@ -256,44 +178,202 @@ nilsson_meta$Sample <- rownames(nilsson_meta)
 nilsson_meta$Cluster <- rep("Metastatic", nrow(nilsson_meta))
 nilsson_meta$Batch <- rep("Nilsson", nrow(nilsson_meta))
 colnames(nilsson_meta)[which(colnames(nilsson_meta) == "SEX")] <- "Sex"
+colnames(nilsson_meta)[which(colnames(nilsson_meta) == "cell_line")] <- "Cell_line"
+nilsson_meta$Sex <- recode(nilsson_meta$Sex, female = "F", male = "M")
+nilsson_meta$toMet <- "Met"
+nilsson_meta$Status <- "Metastatic"
 ```
 
+### Alex Supplement: 
+
+#### Merge the 2 datasets together, rename the columes as described in the supp figure. 
+
+```{r}
+colnames(alex_sup) <- c("Patient_num","Age","Sex","Stage","liver_met","Non_liver_met","Prior_Therapy","liver_embolization","LDH_elevation","Alkaline_Phosphatase_elevation","Mutation","3p_loss","RECIST_12_weeks","Progression_free_survival","Overall_survial","PD-1_dose_num","CTLA-4_dose_num","ADI-PEG20_dose_num","Dose_Delay_or_skip","Delay_or_skip_detail","AEs_related_to_therapy","AEs_not_related_to_therapy")
+colnames(sample_met) <- c("Patient", "IMPACT_ID","SK.MEL","Date","Treatment_stage", "RECIST_pre_tx","Scan_Date","Scan_Date_2", "Frontline","RECIST_12_weeks","Patient_num")
+#Months to days
+alex_sup$Overall_survial <- as.numeric(gsub("\\+","",alex_sup$Overall_survial))*30.4167
+alex_sup$Progression_free_survival <- as.numeric(alex_sup$Progression_free_survival)*30.4167
+alex_sup$Cell_line <- ifelse(alex_sup$liver_met == "Yes", "Liver metastasis","Non-liver metastasis")
+sample_met$Patient_num <- gsub("Patient ","",sample_met$Patient_num)
+```
+
+#### Notes:
+
+PFS = Progression-Free Survival
+
+[Pilot Trial of Arginine Deprivation Plus Nivolumab and Ipilimumab in Patients with Metastatic Uveal Melanoma](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9179243/)
+
+[RECIST Classification](https://www.cibmtr.org/DataManagement/TrainingReference/Manuals/DataManagement/Documents/appendix-n.pdf):
+
+#### Response Evaluation Crteria in Solid Tumors
+
+**SD** = Stable Disease (NR/SD) - neither sufficeint shrinkage to qualify for partial response nor sufficient increase to qualify for progressive disease (PD)
+
+**PD** = Progressive Disease - A 20% or greater increase in the sum of the longest diameter of measured lesions.
+
+[Cancer Stages](https://www.cancer.net/cancer-types/melanoma/stages#:~:text=Stage%20IV%20is%20further%20evaluated,involve%20the%20central%20nervous%20system.)
+
+#### Stage groups for melanoma
+
+**Stage 0**: This refers to melanoma in situ, which means melanoma cells are found only in the outer layer of skin or epidermis. This stage of melanoma is very unlikely to spread to other parts of the body.The melanoma has not spread to any lymph nodes.
+
+**Stage I**: The primary melanoma is still only in the skin and is relatively thin. Stage I is divided into 2 subgroups, IA or IB, depending on the thickness of the melanoma and whether a pathologist sees ulceration under a microscope. The melanoma has not spread to any lymph nodes.
+
+**Stage II**: Stage II melanoma is thicker than stage I melanoma, extending through the epidermis and further into the dermis, the dense inner layer of the skin. The melanoma has not spread to any lymph nodes, but it has a higher chance of spreading. Stage II is divided into 3 subgroups—A, B, or C—depending on how thick the melanoma is and whether there is ulceration.
+
+**Stage III**: Stage III melanoma has spread locally or through the lymphatic system to a regional lymph node located near where the cancer started or to a skin site on the way to a lymph node, called in-transit metastasis, satellite metastasis, or microsatellite disease. The lymphatic system is part of the immune system and drains fluid from body tissues through a series of tubes or vessels. Stage III is divided into 4 subgroups—A, B, C, or D—depending on the thickness of the tumor, the size and number of lymph nodes involved with melanoma, whether the primary tumor has satellite or in-transit lesions, and if it appears ulcerated under a microscope.
+
+**Stage IV**: This stage describes melanoma that has spread through the bloodstream to other parts of the body, such as distant locations on the skin or soft tissue, distant lymph nodes, or other organs like the lung, liver, brain, bone, or gastrointestinal tract. 
+
+**Metastatic Stage**:
+
+*M1a*: The cancer has only spread to distant skin and/or soft-tissue sites.
+
+*M1b*: The cancer has spread to the lung.
+
+*M1c*: The cancer has spread to any other location that does not involve the central nervous system.
+
+*M1d*: The cancer has spread to the central nervous system, including the brain, spinal cord, and/or cerebrospinal fluid, or lining of the brain and/or spinal cord.
+
+#### Create a combined table for MSKCC samples 
+
+```{r}
+mskcc_meta <- data.frame(matrix(nrow = nrow(sample_met), ncol = (ncol(alex_sup)+ncol(sample_met))))
+colnames(mskcc_meta) <- c(colnames(sample_met), colnames(alex_sup))
+for(i in 1:nrow(sample_met)){
+  mskcc_meta[i,] <- c(sample_met[i,], alex_sup[which(alex_sup$Patient_num == sample_met[i,"Patient_num"]),])
+}
+#remove rep. cols
+mskcc_meta <- mskcc_meta[, !(duplicated(colnames(mskcc_meta)))]
+mskcc_meta$Sex <- recode(mskcc_meta$Sex, Female = "F", Male = "M")
+mskcc_meta$Status <- "Metastatic"
+```
+
+#### Mutation data and CN information 
+
+```{r}
+var_convertion <- c("deletion" = "IDEL", "loss" = "LOSS","amp" = "AMP","frameshift" = "FS", "splice" = "SPL")
+#all mutation info is in sample_meta$Tumor.Alteration.s
+#it is written as mutation*space*mutation site*underscore*(if any)mutation type
+mut_list <- c()
+for (i in 1:nrow(mskcc_meta)){
+  mutation_info<- unlist(str_split(mskcc_meta[i,"Mutation"],"; "))
+  for (j in 1:length(mutation_info)){
+    #mutation name
+    mut_info <- unlist(str_split(mutation_info[j]," "))
+    this.mut <- mut_info[1]
+    #add mutation into list (for yes/no id later)
+    mut_list <- append(mut_list,this.mut)
+    #contains a mut.type
+    if(!is.na(str_extract(mutation_info[j], paste(names(var_convertion),collapse = "|")))){
+      mut.type <- var_convertion[str_extract(mutation_info[j], paste(names(var_convertion),collapse = "|"))]
+      mut.type.name <- paste(this.mut,"_type",sep = "")
+      mskcc_meta[i,mut.type.name] <- mut.type
+    }
+    #take out the type information
+    mut.site <- gsub("_.+","",mut_info[2]) %>% gsub(paste(names(var_convertion),collapse = "|"), "", .)
+    if(mut.site!=""){
+      mut.site.name <- paste(this.mut,"_site",sep = "")
+      mskcc_meta[i,mut.site.name] <- mut.site
+    }
+    mskcc_meta[i,this.mut] <- "Yes"
+    }
+}
+mskcc_meta[,unique(mut_list)] <- ifelse(is.na(mskcc_meta[,unique(mut_list)]), "No","Yes")
+mskcc_meta[is.na(mskcc_meta)] <- "NA"
+rownames(mskcc_meta) <- mskcc_meta$SK.MEL
+colnames(mskcc_meta)[which(colnames(mskcc_meta) == "SK.MEL")] <- "Sample"
+mskcc_meta$Cluster <- rep("Metastatic", nrow(mskcc_meta))
+mskcc_meta$Batch <- rep("MSKCC",nrow(mskcc_meta))
+```
+
+CN: There are only 2 for mskcc: 3p loss and 8q AMP
+
+```{r}
+mskcc_meta$`3p` <- mskcc_meta$`3p_loss`
+mskcc_meta$`3p_type` <- recode(mskcc_meta$`3p_loss`, Yes = "LOSS", No = "REG", Unknown = "UN")
+mskcc_meta$toMet <- "Met"
+```
 
 ### Primary (TCGA) samples
 
-#### Rearrage so that the primary separates out by HC clusters; Separate out the mutation information
+Proper Colnames for the clinical data
 
 ```{r}
-#all the mutation info in mdata
-mut_list <- c("GNAQ","GNA11","CYSLTR2","PLCB4","EIF1AX","SF3B1","SRSF2","BAP1","E2F3","MYC","PVT1")
-for (i in 1:length(mut_list)){
-  this.mut <- mut_list[i]
-  #from the code of Matthew, only BAP1 mutations are classified type, all others are sites
-  if(this.mut == "BAP1"){
-    mut.type <- paste(this.mut,"_type", sep = "")
-    mdata[,mut.type] <- mdata[,this.mut]
+my_samples <- str_extract(TCGA_clinical$...1,"TCGA.+") %>% na.omit(.)
+TCGA_clinical_data <- TCGA_clinical[which(TCGA_clinical$...1 %in% my_samples),]
+colnames(TCGA_clinical_data)[1:2] <- TCGA_clinical[2,1:2] 
+colnames(TCGA_clinical_data) <- gsub("Pathology Review:\\s?\r\n\\s?|\\(|\\)","",colnames(TCGA_clinical_data)) %>% gsub("\\s","_",.)
+colnames(TCGA_molecule) <-gsub("\\(.+\\)","",colnames(TCGA_molecule)) %>% gsub("\\s","_",.)
+colnames(TCGA_path1)<-gsub("\\(.+\\)","",colnames(TCGA_path1)) %>% gsub("\\s","_",.)
+colnames(TCGA_path2)<-gsub("\\(.+\\)","",colnames(TCGA_path1)) %>% gsub("\\s","_",.)
+rownames(TCGA_clinical_data) <- TCGA_clinical_data$Patient_ID
+rownames(TCGA_molecule) <- TCGA_molecule$Patient_ID
+rownames(TCGA_path1) <- TCGA_path1$Patient_ID
+rownames(TCGA_path1) <- TCGA_path1$Patient_ID
+TCGA_meta <- cbind(TCGA_clinical_data,TCGA_molecule[rownames(TCGA_clinical_data),],TCGA_path1[rownames(TCGA_clinical_data),], TCGA_path2[rownames(TCGA_clinical_data),])
+TCGA_meta<- TCGA_meta[, !(duplicated(colnames(TCGA_meta)))]
+```
+
+#### Mutation and CN information
+
+```{r}
+#for CN, here are the pulled CN information using which(!is.na(str_extract(colnames(TCGA_pulled), ".?CN|copy_number.?")))
+CN_list <- c("1p","3","8q","6p","JARID2","6q","E2F3","MYC","PVT1","RAF1")
+for (i in 1:length(CN_list)){
+  this.CN <- CN_list[i]
+  #locate this column
+  if(isTRUE(this.CN %in% colnames(TCGA_meta))){
+    TCGA_meta[,this.CN] <- gsub("\\;","",TCGA_meta[,this.CN])
   }else{
-    mut.site <- paste(this.mut,"_site",sep = "")
-    mdata[,mut.site] <- mdata[,this.mut]
-    mdata[,mut.site] <-gsub("\\;","",mdata[,mut.site])
+    cn_col <- which(!is.na(str_extract(colnames(TCGA_meta),paste(this.CN,"_.+",sep = ""))))[1]
+    colnames(TCGA_meta)[cn_col] <- paste(this.CN,"_CN",sep="")
+    TCGA_meta[,this.CN] <- ifelse(TCGA_meta[cn_col] > 2, "AMP", ifelse(TCGA_meta[cn_col] == 2,"REG",ifelse(TCGA_meta[cn_col] < 2, "LOSS", "UN")))
+    colnames(TCGA_meta)[ncol(TCGA_meta)] <- this.CN
   }
-  mdata[,this.mut] <- ifelse((mdata[,this.mut] == "NA" | mdata[,this.mut] == "" | is.na(mdata[,this.mut])), "No", "Yes")
+}
+
+#use the nilsson et al. mut list for a thorough list of mutations
+for (i in 1:length(mutations)){
+  this.mut <- mutations[i]
+  if(isTRUE(this.mut %in% colnames(TCGA_meta))){
+    if(this.mut == "BAP1"){
+      mut.type <- paste(this.mut, "_type",sep="")
+      TCGA_meta[,mut.type] <- recode(TCGA_meta[,this.mut],
+                                     splicing_variant = "SPL",
+                                     frameshift_variant ="FS",
+                                     "NA" = "NA",
+                                     nonsense = "NON",
+                                     homozygous_deletion = "HDEL",
+                                     missense_variant = "MIS",
+                                     inframe_deletion = "IDEL")
+    }else{
+      mut.site <- paste(this.mut,"_site",sep = "")
+      TCGA_meta[,mut.site] <- TCGA_meta[,this.mut]
+    }
+    TCGA_meta[,this.mut] <- ifelse(TCGA_meta[,this.mut] == "NA","No","Yes")
+  }
 }
 #take out the cibersort results from prev analysis
-out_columns <- colnames(mdata)[!is.na(str_extract(colnames(mdata),"mut\\..+|.+\\.cell.+|^NA.|.+phil.+|.+cyte.+|.+phage.+"))]
-mdata <- mdata[,-which(colnames(mdata) %in% out_columns)]
-colnames(mdata)[which(colnames(mdata) == "gender")] <- "Sex"
-colnames(mdata)[which(colnames(mdata) == "stage")] <- "Stage"
-colnames(mdata)[which(colnames(mdata) == "time_to_death")] <- "Overall_survival"
-colnames(mdata)[which(colnames(mdata) == "sample_id")] <- "Sample"
-mdata[is.na(mdata)] <- "NA"
-TCGA_meta <- mdata %>% mutate(across(everything(), ~ifelse(.=="  ", "NA", as.character(.))))
+rownames(primary.col) <- primary.col$case_id
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == "Gender")] <- "Sex"
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == "Age_at_Diagnosis" )] <- "Age"
+TCGA_meta$Sex <- recode(TCGA_meta$Sex, Male = "M", Female = "F")
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == "AJCC_Clinical_Stage")] <- "Stage"
+TCGA_meta$Stage <- gsub("Stage ","", TCGA_meta$Stage)
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == "Tumor_Location")] <- "Cell_line"
+colnames(TCGA_meta)[which(colnames(TCGA_meta) == "Distant_Metastasis")] <- "toMet"
+TCGA_meta[is.na(TCGA_meta)] <- "NA"
+TCGA_meta$Batch <- "TCGA Primary"
+TCGA_meta$Status <- "Primary"
+#### Adding in cluster information
+TCGA_meta[,"Cluster"] <- primary.col[TCGA_meta$Patient_ID,"clust.herv"]
+TCGA_meta <- TCGA_meta %>% mutate(across(everything(), ~ifelse(.=="  ", "NA", as.character(.))))
+TCGA_meta$Sample <-primary.col[TCGA_meta$Patient_ID,"sample_id"] 
+rownames(TCGA_meta) <- primary.col[TCGA_meta$Patient_ID,"sample_id"]
 ```
 
-#### Adding in cluster information
-```{r}
-TCGA_meta[rownames(primary.col),"Cluster"] <- primary.col[,"clust.herv"]
-```
 
 ### Merge all Metadata Together
 

@@ -80,120 +80,6 @@ library(edgeR)
 library(scopetools)
 ```
 
-### Now that there are samples, running DESeq2 on the Datasets
-
-Sample names, organized by PD/SD
-```{r}
-samplenames <- c(
-  #SD
-  "SK_MEL_1316A_T"	,"SK_MEL_1313A_T","SK_MEL_1313B_T","SK_MEL_1306A_T","SK_MEL_1306B_T","SK_MEL_1331A_T","SK_MEL_1331B_T",	
-  #PD
-  "SK_MEL_1299A_T","SK_MEL_1299B_T","SK_MEL_1058B_T",	"SK_MEL_1330A_T","SK_MEL_1330B_T","SK_MEL_1328A_T",
-  #PD (and has timepoint post-pd)
-  "SK_MEL_1327A_T","SK_MEL_1327B_T")
-```
-Interested HERVs
-
-```{r}
-herv_profile <- c('ERVLE_17p11.2c','LTR46_Xq11.1','HERVH_6q24.1b','HERVH_3q21.3a','MER4B_3q21.2','HERVH_10q23.32','HML3_19q13.2','HERVI_9q22.1','MER4_1p21.3','HML3_3q21.2','ERVLE_5q13.2a','HERV3_19q13.42a','HERVE_Xp11.23','ERV316A3_6p21.33c','MER101_19q13.2c','ERVLE_2p13.2a','MER4B_12q22')
-
-```
-
-### Genes
-
-#### Import readcounts and assign sample names
-```{r}
-genedirect <- "/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/align_multi/"
-if(exists("bindtable")){
-  rm("bindtable")}
-for (i in 1:length(samplenames)){
-  filedirect <- paste0(genedirect, samplenames[i],"/ReadsPerGene.out.tab")
-  if(exists("bindtable")){
-    test <- read.table(filedirect, header = FALSE, row.names = 1)
-    #take out the summary rows
-    sample.lane <- data.frame(test[-c(1:4),3], row.names = rownames(test)[-c(1:4)])
-    bindtable <- cbind(bindtable,sample.lane[rownames(bindtable),])
-  } else {
-    test <- read.table(filedirect, header = FALSE, row.names = 1)
-    #take out the summary rows
-    bindtable <- data.frame(test[-c(1:4),3], row.names = rownames(test)[-c(1:4)])
-  }
-}
-colnames(bindtable) <- samplenames
-```
-
-#### HERV counts
-
-
-```{r, eval = FALSE}
-devtools::install_github("nixonlab/scopetools")
-```
-
-```{r}
-direct <- "/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/telescope/"
-#create the directory path to reports.tsv
-filedirect <- vector(length = length(samplenames))
-for (i in 1:length(samplenames)){
-  repo <- paste0(direct,samplenames[i], "/report.tsv")
-  filedirect[i] <- repo
-}
-#make sample names as colnames
-msk_report <- load_telescope_reports(files = filedirect, colnames = samplenames)
-
-#take out no features 
-msk_report <- msk_report[which(rownames(msk_report) != "__no_feature"),]
-```
-
-
-Take out the pre-treatment subgroup
-
-```{r}
-#make names rownames
-rownames(sample_meta) <- make.names(sample_meta$SK.MEL)
-
-meta_sub <- sample_meta[which(sample_meta$Timepoint == "Pre-tx"),]
-meta_sub <- meta_sub[order(meta_sub$RECIST),]
-gene_table <- bindtable[,meta_sub$SK.MEL]
-msk_sub <- msk_report[,meta_sub$SK.MEL]
-```
-
-#### Gene + HERV to Plot PCA
-```{r}
-bind_all <- rbind(bindtable, msk_report[,colnames(msk_report)])
-```
-
-#### Primary Mets Data from TCGA
-
-```{r}
-load("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/04-count_data.Rdata")
-#data is the counts.herv and counts.tx
-```
-
-#### Gene Data
-```{r}
-load("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/primary_UM/analysis2/03-gene_data.Rdata")
-#genes.annot
-```
-
-Combine primary + metastatic pre-tx colData
-```{r}
-#metadata table
-col_info <- intersect(colnames(mdata), colnames(meta_sub))
-um_sub <- rbind(mdata[,col_info, drop = FALSE], meta_sub[,col_info, drop = FALSE])
-um_sub$Cluster <- c(mdata[,"Herv.cluster"], rep("Metastatic", nrow(meta_sub)))
-um_sub$Class<- c(mdata[,"Herv.cluster"], meta_sub[,"RECIST"])
-int_rows <- intersect(rownames(bind_all), rownames(counts.comb))
-data_all <- cbind(bind_all[int_rows,], counts.comb[int_rows,])
-#add a timepoint to mdata
-mdata$Timepoint <- mdata$Herv.cluster
-int_mdata <- intersect(colnames(mdata), colnames(sample_meta))
-meta_all <- rbind(mdata[,int_mdata], sample_meta[,int_mdata])
-```
-
-
-
-
-
 ## Functions
 
 ### Result Table & HeatMap Table Generation
@@ -228,186 +114,39 @@ heattable <- function(deseq, res_table, select_string = "^(ERV|HERV|LTR|MER|HML)
 
 ```
 
-### Cibersortx matrix
-
-Outputs the Mixture file required by [Cibersortx](https://cibersortx.stanford.edu/):
-
-**Mixture file format:**
-
-*1.* Tab-delimited tabular input format (.txt) with no double quotations and no missing entries.
-
-*2.* Genes in column 1; Mixture labels (sample names) in row 1
-
-*3.* Given the significant difference between counts (e.g., CPM) and gene length-normalized expression data (e.g., TPM) we recommend that the signature matrix and mixture files be represented in the same normalization space whenever possible.
-
-*4.* Data should be in non-log space. Note: if maximum expression value is less than 50; CIBERSORTx will assume that data are in log space, and will anti-log all expression values by 2x.
-
-*5.* CIBERSORTx will add an unique identifier to each redundant gene symbol, however we recommend that users remove redundancy prior to file upload.
-
-*6.* CIBERSORTx performs a feature selection and therefore typically does not use all genes in the signature matrix. It is generally ok if some genes are missing from the user’s mixture file. If less than 50% of signature matrix genes overlap, CIBERSORTx will issue a warning.
-
-The default signature matrix to compute cell fraction on Cibersortx is [LM22](https://www.nature.com/articles/nmeth.3337#MOESM207) -  a validated leukocyte gene signature matrix that contains 547 genes distinguishing 22 human hematopoietic cell phenotypes, including seven T-cell types, naïve and memory B cells, plasma cells, natural killer (NK) cells and myeloid subsets. The expression matrix is RMA-normalized because they are from microarray results. 
-
-The default normalization for the cibersortx function will be the median of ratios method of normalization implemented by the DESeq method. 
+Interested HERVs
 
 ```{r}
-library(dplyr)
-library(magrittr)
-library(DESeq2)
-library(biomaRt)
-library(edgeR)
-library(DGEobj.utils)
-#raw counts; methods = median of ratio, CPM, FPKM, FPK, or TPM; colnames order; reference table (if not provided, will connect to biomaRt),the coordinating names to capture and convert in the table (if using TPM, FPKM or FPK, have to provide the colname of exon length/gene length in the reference table)
-cyber_out <- function(count_table, method = "median", name_sequence = colnames(count_table), ref_table = NA, name_cord = c("gene_id","gene_name","full_length")){
-  count_table <- count_table[,name_sequence]
-  if(is.na(ref_table)){
-    #use the getBM method
-    #Ensembl to genename
-    mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
-    ref_table <- getBM(filters= "ensembl_gene_id_version", attributes= c("ensembl_gene_id_version","hgnc_symbol", "start_position","end_position"),values = rownames(count_table), mart= mart)
-    #calculate the gene_length
-    ref_table$full_length <- ref_table$end_position - ref_table$start_position
-    colnames(ref_table) <- c("gene_id","gene_name","start","end","full_length")
-  } else{
-    ref_table <- ref_table[,name_cord]
-    colnames(ref_table) <- c("gene_id","gene_name","full_length")
-  }
-  #normalization
-  if(method %in% c("CPM","FPKM", "FPK" ,"TPM")){
-    has_length <- intersect(rownames(count_table),ref_table$gene_id)
-    #use convertCounts method from DGEobj.utils
-    converted_mat <- convertCounts(
-      countsMatrix = as.matrix(count_table[has_length,]),
-      unit = method,
-      geneLength = ref_table[has_length,"full_length"],
-      log = FALSE,
-      normalize = "none",
-      prior.count = NULL
-    )
-  } else if ( method == "median"){
-    #use DESeq default normalization method
-    #create a pseudo colData (not important)
-    counts_col <- data.frame(gene_ids = name_sequence)
-    rownames(counts_col) <- name_sequence
-    DESeq.c <- DESeqDataSetFromMatrix(countData = as.matrix(count_table),
-                                      colData = counts_col,
-                                      design = ~ gene_ids)
-    #size factor
-    DESeq.gene.c <- estimateSizeFactors(DESeq.c)
-    #normalize & log-sized
-    converted_mat <- counts(DESeq.gene.c, normalized = TRUE)
-  }
-  else{
-    print("Method not supported. Returning original table")
-    return(count_table)
-  }
-  #take out the na's
-  ref_list_nona <- ref_table[which(ref_table$gene_id %in% rownames(count_table)), , drop = FALSE] %>% filter(., gene_name != "" & !is.na(gene_name))
-  #rearrage based on provided colnames
-  output_table <- converted_mat[ref_list_nona$gene_id,]
-  rownames(output_table) <- ref_list_nona$gene_name
-  colnames(output_table) <- name_sequence
-  return(output_table)
-}
+herv_profile <- c('ERVLE_17p11.2c','LTR46_Xq11.1','HERVH_6q24.1b','HERVH_3q21.3a','MER4B_3q21.2','HERVH_10q23.32','HML3_19q13.2','HERVI_9q22.1','MER4_1p21.3','HML3_3q21.2','ERVLE_5q13.2a','HERV3_19q13.42a','HERVE_Xp11.23','ERV316A3_6p21.33c','MER101_19q13.2c','ERVLE_2p13.2a','MER4B_12q22')
 ```
 
-```{r, eval = FALSE}
-cyber_sample <-  c(
-  #SD + Pre-tx
-  "SK_MEL_1316A_T","SK_MEL_1313A_T","SK_MEL_1306A_T","SK_MEL_1331A_T",
-  #SD + On-tx
-  "SK_MEL_1313B_T","SK_MEL_1306B_T","SK_MEL_1331B_T",
-  #PD + Pre-tx
-  "SK_MEL_1299A_T","SK_MEL_1058B_T","SK_MEL_1327A_T",	"SK_MEL_1330A_T","SK_MEL_1328A_T",
-  #PD + On-tx
-  "SK_MEL_1299B_T","SK_MEL_1330B_T",
-  #PD + Post-PD
-  "SK_MEL_1327B_T")
-
-ciber_tpm_msk <- cyber_out(count_table = bindtable, name_sequence = cyber_sample,method = "TPM", ref_table = genes.annot, name_cord = c("gene_id","gene_name","full_length" ))
-ciber_msk_connect <- cyber_out(count_table = bindtable, name_sequence = cyber_sample)
-ciber_msk <- cyber_out(count_table = bindtable, method = "median", name_sequence = cyber_sample, ref_table = genes.annot, name_cord = c("gene_id","gene_name","full_length" ))
-ciber_primary <- cyber_out(count_table = counts.tx, method = "median", name_sequence = rownames(mdata), ref_table = genes.annot, name_cord = c("gene_id","gene_name","full_length" ))
-ciber_primary_tpm <- cyber_out(count_table = counts.tx, name_sequence = rownames(mdata),method = "TPM", ref_table = genes.annot, name_cord = c("gene_id","gene_name","full_length" ))
-ciber_primary_connect <- cyber_out(count_table = counts.tx, name_sequence = rownames(mdata))
-```
-
-```{r, eval = FALSE}
-write.table(data.frame("Gene" = rownames(ciber_msk), ciber_msk), sep = "\t", "Median_Ratio_Normalized_Mixture_File_MSKCC.txt", row.names = F)
-
-write.table(data.frame("Gene" = rownames(ciber_msk_connect), ciber_msk_connect), sep = "\t", "Median_Ratio_Normalized_Mixture_File_Biomart_Ref_MSKCC.txt", row.names = F)
-
-write.table(data.frame("Gene" = rownames(ciber_tpm_msk), ciber_tpm_msk), sep = "\t","TPM_Normalized_Mixture_File_MSKCC.txt", row.names = F)
-#note: will change all hyphens to dots and there is no way to reverse, gsub later
-write.table(data.frame("Gene" = rownames(ciber_primary), ciber_primary), sep = "\t", "Median_Ratio_Normalized_Mixture_File_TCGA.txt", row.names = F)
-
-write.table(data.frame("Gene" = rownames(ciber_primary_tpm), ciber_primary_tpm), sep = "\t","TPM_Normalized_Mixture_File_TCGA.txt",  row.names = F)
-
-write.table(data.frame("Gene" = rownames(ciber_primary_connect), ciber_primary_connect), sep = "\t","Median_Ratio_Normalized_Mixture_File_Biomart_Ref_TCGA.txt" , row.names = F)
-```
-
-### Cibersortx Plotting
+Take out the pre-treatment subgroup
 
 ```{r}
-#load matrix
-ciber_tpm_primary <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Cybersort/CIBERSORTx_Results_TPM_TCGA.csv", header = TRUE, row.names = 1)
-ciber_tpm_msk <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Cybersort/CIBERSORTx_Results_TPM_MSKCC.csv", header = TRUE, row.names = 1)
-ciber_biomart_primary <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Cybersort/CIBERSORTx_Results_TCGA_Biomart.csv", header = TRUE, row.names = 1)
-ciber_biomart_msk <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Cybersort/CIBERSORTx_Results_MSKCC_Biomart.csv", header = TRUE, row.names = 1)
-ciber_msk <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Cybersort/CIBERSORTx_Results_MSKCC.csv", header = TRUE, row.names = 1)
-ciber_primary <- read.csv("/Users/phoebefei/Library/CloudStorage/OneDrive-med.cornell.edu/WCM/Metastatic UM Prj/Cybersort/CIBERSORTx_Results_TCGA.csv", header = TRUE, row.names = 1)
-rownames(ciber_tpm_primary) <- gsub("\\.","-",rownames(ciber_tpm_primary))
-rownames(ciber_biomart_primary) <- gsub("\\.","-",rownames(ciber_biomart_primary))
-rownames(ciber_primary) <- gsub("\\.","-",rownames(ciber_primary))
-rownames(ciber_tpm_msk) <- gsub("\\.","_",rownames(ciber_tpm_msk))
-rownames(ciber_biomart_msk) <- gsub("\\.","_",rownames(ciber_biomart_msk))
-rownames(ciber_msk) <- gsub("\\.","_",rownames(ciber_msk))
+#make names rownames
+rownames(sample_meta) <- make.names(sample_meta$SK.MEL)
+
+meta_sub <- sample_meta[which(sample_meta$Timepoint == "Pre-tx"),]
+meta_sub <- meta_sub[order(meta_sub$RECIST),]
+gene_table <- bindtable[,meta_sub$SK.MEL]
+msk_sub <- msk_report[,meta_sub$SK.MEL]
 ```
 
-
+Combine primary + metastatic pre-tx colData
 ```{r}
-ciber_heat <- function(prime_matrix, msk_matrix, title = "Immune Cell Infiltration Combined", col_split = NA, breaks = seq(0, 3, by = 0.25) , annotations = FALSE, show_colnames = FALSE, cluster_rows = FALSE, cluster_cols = FALSE, color = inferno(6), fontsize = 15, size = 18, reorder_list = c(colnames(prime_matrix), colnames(msk_matrix)), cell_str = "^(?!Mast|Eos|Dendritic).+"){
-  #take out the significant matrix (p values, etc)
-  corr_sig_p <- prime_matrix[,23:26]
-  corr_sig_m <- msk_matrix[,23:26]
-  print(rbind(corr_sig_p,  corr_sig_m[, colnames(corr_sig_p)]))
-  fraction_table_primary <- t(prime_matrix[,1:22])
-  fraction_table_msk<- t(msk_matrix[,1:22])
-  cell_list <- which(!is.na(str_extract(rownames(fraction_table_primary), cell_str)))
-  #combine the expression tables
-  fraction_table_combined <- cbind(fraction_table_primary[cell_list,],fraction_table_msk[cell_list,])
-  #reorder the expression table
-  fraction_table_combined <- fraction_table_combined[,reorder_list]
-  #graphing
-  pheatmap(fraction_table_combined, scale='none',show_rownames = TRUE,main = title,color = color, breaks = breaks, fontsize = fontsize, size = size, cluster_rows = cluster_rows, cluster_cols = cluster_cols, gaps_col = col_split, show_colnames = show_colnames, annotation_col =annotations)
-}
+#metadata table
+col_info <- intersect(colnames(mdata), colnames(meta_sub))
+um_sub <- rbind(mdata[,col_info, drop = FALSE], meta_sub[,col_info, drop = FALSE])
+um_sub$Cluster <- c(mdata[,"Herv.cluster"], rep("Metastatic", nrow(meta_sub)))
+um_sub$Class<- c(mdata[,"Herv.cluster"], meta_sub[,"RECIST"])
+int_rows <- intersect(rownames(bind_all), rownames(counts.comb))
+data_all <- cbind(bind_all[int_rows,], counts.comb[int_rows,])
+#add a timepoint to mdata
+mdata$Timepoint <- mdata$Herv.cluster
+int_mdata <- intersect(colnames(mdata), colnames(sample_meta))
+meta_all <- rbind(mdata[,int_mdata], sample_meta[,int_mdata])
 ```
 
-```{r, fig.height = 5, fig.width = 8}
-herv_reorder <- c(
-  #pre & SD
-  "SK_MEL_1316A_T"	,"SK_MEL_1313A_T","SK_MEL_1306A_T","SK_MEL_1331A_T",
-  #pre & PD
-  "SK_MEL_1299A_T","SK_MEL_1058B_T",	"SK_MEL_1330A_T","SK_MEL_1328A_T","SK_MEL_1327A_T",
-  #On & SD
-  "SK_MEL_1313B_T","SK_MEL_1306B_T","SK_MEL_1331B_T",
-  #On & PD
-  "SK_MEL_1299B_T","SK_MEL_1330B_T",
-  #Post-PD
-  "SK_MEL_1327B_T")
-primary_cols <- rownames(mdata)
-col_annotation <- meta_all[c(primary_cols, herv_reorder),"Timepoint", drop = FALSE]
-ciber_heat(prime_matrix = ciber_tpm_primary, msk_matrix = ciber_tpm_msk, title = "Immune Cell Infiltration,TPM Normalized", col_split = c(20, 43, 61, 80, 89, 94), breaks = seq(0, 2, by = 0.1) , annotations = col_annotation, show_colnames = TRUE, cluster_rows = FALSE, cluster_cols = FALSE, color = inferno(20), fontsize = 14, size = 20, reorder_list = c(primary_cols, herv_reorder), cell_str = "^(?!Mast|Eos|Dendritic).+")
-```
-
-```{r, fig.height = 5, fig.width = 8}
-ciber_heat(prime_matrix = ciber_biomart_primary, msk_matrix = ciber_biomart_msk, title = "Immune Cell Infiltration, db.org Reference", col_split = c(20, 43, 61, 80, 89, 94), breaks = seq(0, 2, by = 0.1) , annotations = col_annotation, show_colnames = TRUE, cluster_rows = FALSE, cluster_cols = FALSE, color = inferno(20), fontsize = 14, size = 20, reorder_list = c(primary_cols, herv_reorder), cell_str = "^(?!Mast|Eos|Dendritic).+")
-```
-
-
-```{r, fig.height = 5, fig.width = 8}
-ciber_heat(prime_matrix = ciber_primary, msk_matrix = ciber_msk, title = "Immune Cell Infiltration, Gene.annot Reference", col_split = c(20, 43, 61, 80, 89, 94), breaks = seq(0, 2.5, by = 0.1) , annotations = col_annotation, show_colnames = TRUE, cluster_rows = FALSE, cluster_cols = FALSE, color = inferno(25), fontsize = 14, size = 20, reorder_list = c(primary_cols, herv_reorder), cell_str = "^(?!Mast|Eos|Dendritic).+")
-```
 
 
 ### DESeq Objects
