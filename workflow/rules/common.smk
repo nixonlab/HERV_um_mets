@@ -1,45 +1,40 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-msk_samples = [
-    'SK_MEL_1316A_T',
-    'SK_MEL_1313A_T',
-    'SK_MEL_1299A_T',
-    'SK_MEL_1331A_T',
-    'SK_MEL_1058B_T',
-    'SK_MEL_1327A_T',
-    'SK_MEL_1330A_T',
-    'SK_MEL_1306B_T',
-    'SK_MEL_1306A_T',
-    'SK_MEL_1313B_T',
-    'SK_MEL_1331B_T',
-    'SK_MEL_1299B_T',
-    'SK_MEL_1328A_T',
-    'SK_MEL_1327B_T',
-    'SK_MEL_1330B_T',
-]
+""" Parsing MSK samples information
+"""
+msk_runs = pd.read_csv('resources/mskruns.txt', sep='\t', header=None, 
+                       names=['SAMPLE_ID', 'LANE', 'R1_PATH', 'R2_PATH', 'RUN_DIR'])
+msk_clin = pd.read_csv('resources/hg_19010_clin.csv').sort_values(by='SK-MEL')
+msk_samples = sorted(msk_runs['SAMPLE_ID'].unique().tolist())
 
+assert msk_samples == msk_clin['SK-MEL'].tolist()
+
+msk_sample_meta = {'SAMPLE_ID': [], 'RUN_UBAM': [], }
+for s in msk_samples:
+    run_paths = []
+    for i,row in (msk_runs.loc[msk_runs['SAMPLE_ID'] == s,]).sort_values(by='LANE').iterrows():
+        run_paths.append('%s/%s.%s.unaligned.bam' % (row.loc['RUN_DIR',], row.loc['SAMPLE_ID',], row.loc['LANE',]))
+    msk_sample_meta['SAMPLE_ID'].append(s)
+    msk_sample_meta['RUN_UBAM'].append(','.join(run_paths))
+
+msk_sample_meta = pd.concat([pd.DataFrame(msk_sample_meta), msk_clin], axis=1).set_index('SAMPLE_ID')
+
+""" Parsing EGA samples information
+"""
+ega_files = (pd.read_csv('resources/EGAD00001006031.files.tsv', sep='\t')).set_index("FILE_ACCESSION")
+ega_runs = (pd.read_csv('resources/EGAD00001006031.runs.tsv', sep='\t')).set_index("SAMPLE_ACCESSION")
+ega_sample_meta = (pd.read_csv('resources/EGAD00001006031.samples_metadata.tsv', sep='\t')).set_index('SAMPLE_ID')
+
+ega_samples = ega_sample_meta.index.tolist()
+
+
+ega_run_sample_map = {}
+for samp_id,row in ega_sample_meta.iterrows():
+    for runid in row['RUN_ACCESSION'].split(','):
+        ega_run_sample_map[runid] = samp_id
+
+""" All samples """
 samples = pd.DataFrame(
-        {'sample_id': msk_samples,}
+        {'sample_id': msk_samples + ega_samples}
     ).set_index("sample_id", drop=False)
-
-# samples = (
-#     pd.read_csv(
-#         config['samples'],
-#         sep="\t",
-#         dtype={
-#           'sample_id': str,
-#           'file_name': str,
-#           'md5sum': str,
-#           'file_size': int,
-#           'object_id': str,
-#         },
-#         comment="#",
-#     )
-#     .set_index("sample_id", drop=False)
-#     .sort_index()
-# )
-
-# def object_id_from_file_name(wc):
-#     row = samples.loc[samples['file_name'] == wc.file_name]
-#     return row['object_id'].values[0].split('/')[1]

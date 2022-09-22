@@ -8,3 +8,5 @@ telescope:
 genome_fasta: "resources/GRCh38.d1.vd1.fa"
 annotation_gtf: "resources/gencode.v38.annotation.gtf"
 
+ega_credentials: "$HOME/.egaconfig"
+
