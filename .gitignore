@@ -4,3 +4,11 @@ slurm-*.out
 .RData
 .Rproj
 .Rproj*
+HERV_um_mets.Rproj
+Notes to Meta UM Proj.Rmd
+.DS_store
+results/
+resources/
+.log
+EGAF00003478604/
+*.log
