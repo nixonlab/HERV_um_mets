@@ -4,3 +4,9 @@ slurm-*.out
 .RData
 .Rproj
 .Rproj*
+.DS_store
+results/
+resources/
+.log
+EGAF00003478604/
+*.log

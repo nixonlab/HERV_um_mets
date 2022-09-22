@@ -3,6 +3,7 @@
 from snakemake.utils import min_version
 import os
 import pandas as pd
+import re
 
 min_version("6.4.1")
 
@@ -10,7 +11,8 @@ configfile: "config/config.yaml"
 
 include: "rules/common.smk"
 # include: "rules/download_bam.smk"
-include: "rules/make_ubam.smk"
+include: "rules/make_msk_ubam.smk"
+include: "rules/make_ega_ubam.smk"
 include: "rules/align_star.smk"
 include: "rules/telescope.smk"
 include: "rules/stringtie.smk"
@@ -33,4 +35,10 @@ rule all:
 localrules: msk
 rule msk:
     input:
-        expand("results/complete/{s}.txt", s=list(samples.index))
+        expand("results/complete/{s}.txt", s=msk_samples)
+
+
+localrules: ega
+rule ega:
+    input:
+        expand("results/complete/{s}.txt", s=ega_samples)
