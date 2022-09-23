@@ -34,7 +34,20 @@ for samp_id,row in ega_sample_meta.iterrows():
     for runid in row['RUN_ACCESSION'].split(','):
         ega_run_sample_map[runid] = samp_id
 
+""" Parsing TCGA samples information
+
+"""
+#whole sample sheet
+skcm_sample_sheet = pd.read_csv(conifg['samples'],sep = '\t', header = 0)
+skcm_sample_sheet.set_index(["id"], drop = False, inplace=True)
+#only need the selected skin mels
+gdc_file = pd.read_csv(sample_names_info, sep = "\t", header = 0)
+gdc_file.set_index(['File ID'], drop = False, inplace = True)
+gdc_file["md5sum"] = skcm_sample_sheet.loc[gdc_file.index,"md5"]
+gdc_file.set_index(["Sample ID"], drop = False , inplace = True)
+tcga_samples = gdc_file.index.tolist()
+
 """ All samples """
 samples = pd.DataFrame(
-        {'sample_id': msk_samples + ega_samples}
+        {'sample_id': msk_samples + ega_samples + tcga_samples}
     ).set_index("sample_id", drop=False)

@@ -24,7 +24,7 @@ resources/gen3-client download-single\
   --download-path results/original_bam\
   --guid={params[0][obj_id]}
   
-  echo "{params[0][md5sum]}  {output[0]}" | md5sum -c -
+echo "{params[0][md5sum]}  {output[0]}" | md5sum -c -
         '''
 
 def original_bam_from_sample_id(wc):
