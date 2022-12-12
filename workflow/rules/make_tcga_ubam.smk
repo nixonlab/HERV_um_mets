@@ -15,10 +15,9 @@ rule download_bam_tcga:
 mkdir -p {output[0]}
 curl\
  -H "X-Auth-Token: {input[0]}"\
- --remote-name --remote-header-name\
  https://api.gdc.cancer.gov/data/{params.uuid}\
  -o {output[0]}
-echo {params.md5sum} {output[0]}/{s}.bam | md5sum -c -
+echo {params.md5sum} | md5sum -c
 chmod 600 {output[0]}/{s}.bam
         '''
 
