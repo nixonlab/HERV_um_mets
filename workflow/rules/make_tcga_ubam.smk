@@ -20,7 +20,7 @@ mkdir -p {output[0]}
 gdc-client download\
  -t {input[0]}\
  -d {output[0]}\
- {params.uuid}\
+ {params.uuid}
 chmod 600 {output[0]}
 mv {output[0]}/{params.uuid}/*.bam {output[1]}
         '''
