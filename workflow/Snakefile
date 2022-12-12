@@ -9,7 +9,7 @@ min_version("6.4.1")
 
 configfile: "../config/config.yaml"
 
-include: "rules/common.smk"
+#include: "rules/common.smk"
 #include: "rules/download_bam.smk"
 #include: "rules/make_msk_ubam.smk"
 #include: "rules/make_ega_ubam.smk"
