@@ -12,9 +12,9 @@ rule download_bam_tcga:
         sample_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     shell:
         '''
-mkdir -p $(dirname {output[0]})
+mkdir -p dirname {output[0]}
 curl\
- -H "X-Auth-Token: $({input[0]})"\
+ -H "X-Auth-Token: {input[0]}"\
  https://api.gdc.cancer.gov/data/{params.uuid}\
  > {output[0]}
 echo {params.md5sum} {output[0]} | md5sum -c -
