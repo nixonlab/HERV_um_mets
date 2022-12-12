@@ -11,9 +11,10 @@ rule download_bam_tcga:
         md5sum = lambda wc: gdc_file.loc[wc.sample_id]['md5']
     wildcard_constraints:
         sample_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
+    threads: 4
     shell:
         '''
-mkdir -p {ouptu[0]}
+mkdir -p {output[0]}
 curl\
  -t {input[0]}\
  --latest -d {output[0]}\
