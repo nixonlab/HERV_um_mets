@@ -9,7 +9,7 @@ rule download_bam_tcga:
         uuid = lambda wc: gdc_file.loc[wc.gdc_id]['Sample ID'],
         md5sum = lambda wc: gdc_file.loc[wc.gdc_id]['md5']
     wildcard_constraints:
-        gdc_id = "TCGA\\-..\\-[A-Z]...\\-[0-9]{2}[A-Z]"
+        gdc_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     shell:
         '''
 mkdir -p $(dirname {output[0]})
@@ -38,7 +38,7 @@ rule revert_and_mark_adapters:
     log:
         "results/ubam/{gdc_id}.revert_bam.log"
     wildcard_constraints:
-        gdc_id = "TCGA\\-..\\-[A-Z]...\\-[0-9]{2}[A-Z]"
+        gdc_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     conda:
         "envs/utils.yaml"
     params:
