@@ -19,7 +19,7 @@ rule download_bam_tcga:
 mkdir -p {output[0]}
 gdc-client download\
  -t {input[0]}\
- --latest -d {output[0]}\
+ -d {output[0]}\
  {params.uuid}\
 chmod 600 {output[0]}
 mv {output[0]}/{params.uuid}/*.bam {output[1]}
