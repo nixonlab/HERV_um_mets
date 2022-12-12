@@ -4,7 +4,7 @@ rule download_bam_tcga:
     input:
         config['GDC_token']
     output:
-        temp('results/original_bam/{sample_id}')
+        temp('results/original_bam/{sample_id}.bam')
     params:
         uuid = lambda wc: gdc_file.loc[wc.sample_id]['File ID'],
         md5sum = lambda wc: gdc_file.loc[wc.sample_id]['md5']
@@ -12,13 +12,12 @@ rule download_bam_tcga:
         sample_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     shell:
         '''
-mkdir -p {output[0]}
 curl\
  -H "X-Auth-Token: {input[0]}"\
  https://api.gdc.cancer.gov/data/{params.uuid}\
  -o {output[0]}
 echo {params.md5sum} | md5sum -c
-chmod 600 {output[0]}/{s}.bam
+chmod 600 {output[0]}
         '''
 
 # Default SAM attributes cleared by RevertSam
@@ -32,7 +31,7 @@ rule revert_and_mark_adapters:
     """ Create unmapped BAM (uBAM) from aligned BAM
     """
     input:
-        "results/original_bam/{sample_id}"
+        "results/original_bam/{sample_id}.bam"
     output:
         "results/ubam/{sample_id}.bam"
     log:
@@ -47,7 +46,7 @@ rule revert_and_mark_adapters:
     shell:
         '''
 picard RevertSam\
- -I {input[0]}/{s}.bam\
+ -I {input[0]}\
  -O {output[0]}\
  --SANITIZE true\
  --COMPRESSION_LEVEL 0\
