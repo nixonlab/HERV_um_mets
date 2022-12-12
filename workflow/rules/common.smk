@@ -3,9 +3,9 @@
 
 """ Parsing MSK samples information
 """
-msk_runs = pd.read_csv('/resources/mskruns.txt', sep='\t', header=None, 
+msk_runs = pd.read_csv('resources/mskruns.txt', sep='\t', header=None, 
                        names=['SAMPLE_ID', 'LANE', 'R1_PATH', 'R2_PATH', 'RUN_DIR'])
-msk_clin = pd.read_csv('/resources/hg_19010_clin.csv').sort_values(by='SK-MEL')
+msk_clin = pd.read_csv('resources/hg_19010_clin.csv').sort_values(by='SK-MEL')
 msk_samples = sorted(msk_runs['SAMPLE_ID'].unique().tolist())
 
 assert msk_samples == msk_clin['SK-MEL'].tolist()
@@ -22,9 +22,9 @@ msk_sample_meta = pd.concat([pd.DataFrame(msk_sample_meta), msk_clin], axis=1).s
 
 """ Parsing EGA samples information
 """
-ega_files = (pd.read_csv('/resources/EGAD00001006031.files.tsv', sep='\t')).set_index("FILE_ACCESSION")
-ega_runs = (pd.read_csv('/resources/EGAD00001006031.runs.tsv', sep='\t')).set_index("SAMPLE_ACCESSION")
-ega_sample_meta = (pd.read_csv('/resources/EGAD00001006031.samples_metadata.tsv', sep='\t')).set_index('SAMPLE_ID')
+ega_files = (pd.read_csv('resources/EGAD00001006031.files.tsv', sep='\t')).set_index("FILE_ACCESSION")
+ega_runs = (pd.read_csv('resources/EGAD00001006031.runs.tsv', sep='\t')).set_index("SAMPLE_ACCESSION")
+ega_sample_meta = (pd.read_csv('resources/EGAD00001006031.samples_metadata.tsv', sep='\t')).set_index('SAMPLE_ID')
 
 ega_samples = ega_sample_meta.index.tolist()
 
