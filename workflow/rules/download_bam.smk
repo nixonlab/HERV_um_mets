@@ -2,16 +2,15 @@
 # -*- coding: utf-8 -*-
 
 def object_id_from_file_name(wc):
-    row = samples.loc[samples['file_name'] == wc.file_name]
+    row = samples.loc[samples['filename'] == wc.filename]
     return {
-        'obj_id': row['object_id'].values[0].split('/')[1],
-        'md5sum': row['md5sum'].values[0],
+        'obj_id': row['id'].values[0].split('/')[1],
+        'md5sum': row['md5'].values[0],
     }
-
 
 rule download_bam_gtex:
     output:
-        temp('results/original_bam/{file_name}')
+        temp('results/original_bam/{filename}')
     params:
         object_id_from_file_name,
     shell:

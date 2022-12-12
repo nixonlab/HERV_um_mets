@@ -1,5 +1,7 @@
-samples: "resources/gdc_manifest_20220913_193952.tsv"
-sample_names_info: "resources/test_table.tsv"
+tcga_manifest: "resources/gdc_manifest_uvm.tsv"
+sample_names_info: "gdc_uvm_sample_sheet.tsv"
+tcga_file_id: "File ID"
+tcga_sample_id: "Sample ID"
 GDC_token: "/home/tof4003/gdc_token_fei.txt"
 local_tmp: "/athena/nixonlab/scratch/tof4003"
 star_align_multi:
@@ -10,6 +12,5 @@ telescope:
     annotation: "resources/retro.hg38.v1.gtf"
 genome_fasta: "resources/GRCh38.d1.vd1.fa"
 annotation_gtf: "resources/gencode.v38.annotation.gtf"
-
 ega_credentials: "$HOME/.egaconfig"
 

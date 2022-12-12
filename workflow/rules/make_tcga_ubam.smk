@@ -7,7 +7,7 @@ rule download_bam_tcga:
         temp('results/original_bam/{gdc_id}')
     params:
         uuid = lambda wc: gdc_file.loc[wc.gdc_id]['Sample ID'],
-        md5sum = lambda wc: gdc_file.loc[wc.gdc_id]['md5sum']
+        md5sum = lambda wc: gdc_file.loc[wc.gdc_id]['md5']
     wildcard_constraints:
         gdc_id = "TCGA\\-..\\-[A-Z]...\\-[0-9]{2}[A-Z]"
     shell:
