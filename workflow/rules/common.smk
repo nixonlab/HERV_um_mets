@@ -47,6 +47,15 @@ for samp_id,row in ega_sample_meta.iterrows():
 #gdc_file.set_index(["Sample ID"], drop = False , inplace = True)
 #tcga_samples = gdc_file.index.tolist()
 
+#tcga for uveal melanoma
+tcga_manifest = pd.read_csv(config['samples'],sep = "\t",header = 0)
+tcga_manifest.set_index("id", inplace = True, drop = False)
+tcga_meta = pd.read_csv(config['sample_names_info'],sep = "\t",header = 0)
+tcga_meta.set_index(config['tcga_file_id'], inplace = True, drop = False)
+gdc_file = pd.concat([tcga_manifest,tcga_meta],axis = 1)
+gdc_file.set_index(config['tcga_sample_id'],inplace = True, drop = False)
+tcga_samples = gdc_file[config['tcga_sample_id']].unique().tolist()
+
 """ All samples """
 samples = pd.DataFrame(
         {'sample_id': msk_samples + ega_samples + tcga_samples}

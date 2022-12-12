@@ -9,7 +9,7 @@ min_version("6.4.1")
 
 configfile: "../config/config.yaml"
 
-#include: "rules/common.smk"
+include: "rules/common.smk"
 #include: "rules/download_bam.smk"
 #include: "rules/make_msk_ubam.smk"
 #include: "rules/make_ega_ubam.smk"
@@ -17,14 +17,6 @@ include: "rules/make_tcga_ubam.smk"
 include: "rules/align_star.smk"
 include: "rules/telescope.smk"
 include: "rules/stringtie.smk"
-
-tcga_manifest = pd.read_csv(config['samples'],sep = "\t",header = 0)
-tcga_manifest.set_index("id", inplace = True, drop = False)
-tcga_meta = pd.read_csv(config['sample_names_info'],sep = "\t",header = 0)
-tcga_meta.set_index(config['tcga_file_id'], inplace = True, drop = False)
-gdc_file = pd.concat([tcga_manifest,tcga_meta],axis = 1)
-gdc_file.set_index(config['tcga_sample_id'],inplace = True, drop = False)
-tcga_samples = gdc_file[config['tcga_sample_id']].unique().tolist()
 
 localrules: sample_complete
 rule sample_complete:
