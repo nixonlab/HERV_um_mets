@@ -4,12 +4,12 @@ rule download_bam_tcga:
     input:
         config['GDC_token']
     output:
-        temp('results/original_bam/{gdc_id}')
+        temp('results/original_bam/{sample_id}')
     params:
-        uuid = lambda wc: gdc_file.loc[wc.gdc_id]['Sample ID'],
-        md5sum = lambda wc: gdc_file.loc[wc.gdc_id]['md5']
+        uuid = lambda wc: gdc_file.loc[wc.sample_id]['Sample ID'],
+        md5sum = lambda wc: gdc_file.loc[wc.sample_id]['md5']
     wildcard_constraints:
-        gdc_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
+        sample_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     shell:
         '''
 mkdir -p $(dirname {output[0]})
@@ -32,13 +32,13 @@ rule revert_and_mark_adapters:
     """ Create unmapped BAM (uBAM) from aligned BAM
     """
     input:
-        "results/original_bam/{gdc_id}"
+        "results/original_bam/{sample_id}"
     output:
-        "results/ubam/{gdc_id}.bam"
+        "results/ubam/{sample_id}.bam"
     log:
-        "results/ubam/{gdc_id}.revert_bam.log"
+        "results/ubam/{sample_id}.revert_bam.log"
     wildcard_constraints:
-        gdc_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
+        sample_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     conda:
         "../envs/utils.yaml"
     params:
