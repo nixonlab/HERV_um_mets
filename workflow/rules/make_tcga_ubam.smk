@@ -4,7 +4,7 @@ rule download_bam_tcga:
     input:
         config['GDC_token']
     output:
-        temp('results/original_bam/{sample_id}.bam')
+        temp('results/original_bam/{sample_id}')
     params:
         uuid = lambda wc: gdc_file.loc[wc.sample_id]['File ID'],
         md5sum = lambda wc: gdc_file.loc[wc.sample_id]['md5']
@@ -32,7 +32,7 @@ rule revert_and_mark_adapters:
     """ Create unmapped BAM (uBAM) from aligned BAM
     """
     input:
-        "results/original_bam/{sample_id}.bam"
+        "results/original_bam/{sample_id}"
     output:
         "results/ubam/{sample_id}.bam"
     log:
