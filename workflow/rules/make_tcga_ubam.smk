@@ -17,10 +17,11 @@ rule download_bam_tcga:
 mkdir -p {output[0]}
 token=$(cat {input[0]})
 curl -H "X-Auth-Token: $token"\
- -o {output[0]} -J\
+ -O -J\
  https://api.gdc.cancer.gov/data/{params.uuid}
 chmod 600 {output[0]}
-mv {output[0]}/{params.uuid}/*.bam {output[1]}
+mv {params.uuid}/*.bam {output[1]}
+rm -rf {params.uuid}
         '''
 
 # Default SAM attributes cleared by RevertSam
