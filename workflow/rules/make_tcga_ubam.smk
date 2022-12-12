@@ -4,7 +4,7 @@ rule download_bam_tcga:
     input:
         config['GDC_token']
     conda:
-        "../envs/utils.yaml"
+        "../envs/gdc_client.yaml"
     output:
         temp('results/original_bam/{sample_id}'),
         temp('results/original_bam/{sample_id}.bam')
