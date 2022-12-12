@@ -34,7 +34,7 @@ rule revert_and_mark_adapters:
     input:
         "results/original_bam/{gdc_id}"
     output:
-        protected("results/ubam/{gdc_id}.bam")
+        "results/ubam/{gdc_id}.bam"
     log:
         "results/ubam/{gdc_id}.revert_bam.log"
     wildcard_constraints:
