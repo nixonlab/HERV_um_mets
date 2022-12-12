@@ -15,7 +15,7 @@ rule download_bam_tcga:
     shell:
         '''
 mkdir -p {output[0]}
-curl\
+gdc-client download\
  -t {input[0]}\
  --latest -d {output[0]}\
  {params.uuid}\
