@@ -40,7 +40,7 @@ rule revert_and_mark_adapters:
     wildcard_constraints:
         gdc_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     conda:
-        "envs/utils.yaml"
+        "../envs/utils.yaml"
     params:
         attr_to_clear = expand("--ATTRIBUTE_TO_CLEAR {a}", a=ALN_ATTRIBUTES),
         tmpdir = config['local_tmp']
