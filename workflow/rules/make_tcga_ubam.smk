@@ -18,8 +18,8 @@ curl\
  --remote-name --remote-header-name\
  https://api.gdc.cancer.gov/data/{params.uuid}\
  -o {output[0]}
-echo {params.md5sum} {output[0]} | md5sum -c -
-chmod 600 {output[0]}
+echo {params.md5sum} {output[0]}/{s}.bam | md5sum -c -
+chmod 600 {output[0]}/{s}.bam
         '''
 
 # Default SAM attributes cleared by RevertSam
@@ -48,7 +48,7 @@ rule revert_and_mark_adapters:
     shell:
         '''
 picard RevertSam\
- -I {input[0]}\
+ -I {input[0]}/{s}.bam\
  -O {output[0]}\
  --SANITIZE true\
  --COMPRESSION_LEVEL 0\
