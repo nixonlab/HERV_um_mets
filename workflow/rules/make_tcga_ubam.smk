@@ -15,7 +15,7 @@ rule download_bam_tcga:
     shell:
         '''
 mkdir -p {output[0]}
-token=$(cat <{input[0]}>)
+token=$(cat {input[0]})
 curl -H "X-Auth-Token: $token"\
  --output-dir {output[0]} -J\
  https://api.gdc.cancer.gov/data/{params.uuid}
