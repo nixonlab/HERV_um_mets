@@ -17,7 +17,7 @@ rule download_bam_tcga:
 mkdir -p {output[0]}
 token=$(cat {input[0]})
 curl -H "X-Auth-Token: $token"\
- --output-dir {output[0]} -J\
+ -o {output[0]} -J\
  https://api.gdc.cancer.gov/data/{params.uuid}
 chmod 600 {output[0]}
 mv {output[0]}/{params.uuid}/*.bam {output[1]}
