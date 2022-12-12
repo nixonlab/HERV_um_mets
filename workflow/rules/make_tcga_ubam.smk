@@ -3,6 +3,8 @@ rule download_bam_tcga:
     # download BAM from GDC for TCGA data
     input:
         config['GDC_token']
+    conda:
+        "../envs/utils.yaml"
     output:
         temp('results/original_bam/{sample_id}'),
         temp('results/original_bam/{sample_id}.bam')
