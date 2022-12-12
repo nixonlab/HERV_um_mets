@@ -1,7 +1,0 @@
-name: gdc_client
-channels:
-  - bioconda
-  - defaults
-dependencies:
-  - parcel >=0.2
-  - gdc-client
