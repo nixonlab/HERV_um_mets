@@ -7,7 +7,7 @@ import re
 
 min_version("6.4.1")
 
-configfile: "../config/config.yaml"
+configfile: "config/config.yaml"
 
 include: "rules/common.smk"
 #include: "rules/download_bam.smk"
