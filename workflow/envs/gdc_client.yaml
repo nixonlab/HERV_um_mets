@@ -1,6 +1,5 @@
 name: gdc_client
 channels:
-  - bioconda/label/cf201901
   - conda-forge
   - bioconda
   - defaults
