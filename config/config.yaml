@@ -1,5 +1,5 @@
-tcga_manifest: "../resources/gdc_manifest_uvm.tsv"
-sample_names_info: "../resources/gdc_uvm_sample_sheet.tsv"
+tcga_manifest: "/resources/gdc_manifest_uvm.tsv"
+sample_names_info: "/resources/gdc_uvm_sample_sheet.tsv"
 tcga_file_id: "File ID"
 tcga_sample_id: "Sample ID"
 GDC_token: "/home/tof4003/gdc_token_fei.txt"
