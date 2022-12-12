@@ -6,3 +6,4 @@ channels:
 dependencies:
   - samtools
   - picard-slim ==2.27.0
+  - gdc-client
