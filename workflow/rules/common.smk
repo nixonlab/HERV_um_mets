@@ -48,7 +48,7 @@ for samp_id,row in ega_sample_meta.iterrows():
 #tcga_samples = gdc_file.index.tolist()
 
 #tcga for uveal melanoma
-tcga_manifest = pd.read_csv(config['samples'],sep = "\t",header = 0)
+tcga_manifest = pd.read_csv(config['tcga_manifest'],sep = "\t",header = 0)
 tcga_manifest.set_index("id", inplace = True, drop = False)
 tcga_meta = pd.read_csv(config['sample_names_info'],sep = "\t",header = 0)
 tcga_meta.set_index(config['tcga_file_id'], inplace = True, drop = False)
