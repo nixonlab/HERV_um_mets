@@ -3,6 +3,7 @@ cluster:
     sbatch {cluster.args} 
         --partition={cluster.partition}
         --ntasks={cluster.ntasks}
+        --time=3-00:00:00
         --exclude=node160
         --cpus-per-task={cluster.cpus-per-task}
         --output={cluster.output}
