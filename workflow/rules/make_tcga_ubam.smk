@@ -54,7 +54,6 @@ picard RevertSam\
  --VALIDATION_STRINGENCY SILENT\
  {params.attr_to_clear}\
  --TMP_DIR {params.tmpdir}\
- 2
 chmod 600 {output[0]}
         '''
 
