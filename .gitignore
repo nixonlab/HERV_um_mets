@@ -48,6 +48,7 @@ results/**
 logs/**
 .snakemake
 .snakemake/**
+profiles/**
 **/wcm_slurm/**
 **log**
 **runs**
