@@ -4,7 +4,6 @@ rule download_bam_tcga:
     input:
         config['GDC_token']
     output:
-        temp('results/original_bam/{sample_id}'),
         temp('results/original_bam/{sample_id}.bam')
     params:
         uuid = lambda wc: gdc_file.loc[wc.sample_id]['File ID'],
@@ -14,14 +13,12 @@ rule download_bam_tcga:
     threads: 4
     shell:
         '''
-mkdir -p {output[0]}
 token=$(cat {input[0]})
 curl -H "X-Auth-Token: $token"\
  -O -J\
  https://api.gdc.cancer.gov/data/{params.uuid}
+mv {params.uuid}.rna_seq.transcriptome.gdc_realn.bam {output[0]}
 chmod 600 {output[0]}
-mv {params.uuid}/*.bam {output[1]}
-rm -rf {params.uuid}
         '''
 
 # Default SAM attributes cleared by RevertSam
