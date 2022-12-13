@@ -15,9 +15,8 @@ rule download_bam_tcga:
         '''
 token=$(cat {input[0]})
 curl -H "X-Auth-Token: $token"\
- -O -J\
+ -J -o {output[0]}\
  https://api.gdc.cancer.gov/data/{params.uuid}
-mv {params.uuid}.rna_seq.transcriptome.gdc_realn.bam {output[0]}
 chmod 600 {output[0]}
         '''
 
