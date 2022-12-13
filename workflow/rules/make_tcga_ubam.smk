@@ -36,7 +36,7 @@ rule revert_and_mark_adapters:
     output:
         "results/ubam/{sample_id}.bam"
     log:
-        "results/ubam/{sample_id}.revert_bam.log"
+        "logs/ubam/{sample_id}.revert_bam.log"
     wildcard_constraints:
         sample_id = "TCGA\\-..\\-[A-Z]...\\-..[A-Z]"
     conda:
@@ -54,7 +54,7 @@ picard RevertSam\
  --VALIDATION_STRINGENCY SILENT\
  {params.attr_to_clear}\
  --TMP_DIR {params.tmpdir}\
- 2> {log[0]}\
+ 2
 chmod 600 {output[0]}
         '''
 
