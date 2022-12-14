@@ -15,9 +15,9 @@ rule download_bam_tcga:
         '''
 token=$(cat {input[0]})
 curl -H "X-Auth-Token: $token"\
- -o {output[0]}\
- -C -\
+ -o {output[0]} -s\
  https://api.gdc.cancer.gov/data/{params.uuid}
+echo {params.md5sum} {output[0]} | md5sum -c -
 chmod 600 {output[0]}
         '''
 
@@ -43,7 +43,7 @@ rule revert_and_mark_adapters:
         "../envs/utils.yaml"
     params:
         attr_to_clear = expand("--ATTRIBUTE_TO_CLEAR {a}", a=ALN_ATTRIBUTES),
-        tmpdir = config['local_tmp']
+        tmpdir = config['tmpdir']
     shell:
         '''
 picard RevertSam\
