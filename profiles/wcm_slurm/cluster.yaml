@@ -7,6 +7,7 @@ __default__:
     output: "logs/slurm-%j.{rule}.{wildcards.sample_id}.out"
     job-name: "sm.{rule}.{wildcards.sample_id}"
     exclusive: ""    
+
 star_align_multi:
     cpus-per-task: 32
     mem: "90G"
@@ -14,8 +15,9 @@ telescope:
     cpus-per-task: 2
 stringtie:
     cpus-per-task: 2
-samtools_sort_cram:
-    cpus-per-task: 8
-samtools_bam_cram:
-    output: "logs/slurm-%j.{rule}.out"
-    job-name: "sm.{rule}"
+download_bam_tcga:
+    cpus-per-task: 2
+    mem: "15G"
+revert_and_mark_adapters:
+    cpus-per-task: 2
+    mem: "15G"
