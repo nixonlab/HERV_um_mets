@@ -6,7 +6,7 @@ rule star_align_multi:
         ubam = 'results/ubam/{sample_id}.bam',
         genomeDir = config['star_align_multi']['genomeDir']
     output:
-        "results/align_multi/{sample_id}/Aligned.out.bam",
+        temp("results/align_multi/{sample_id}/Aligned.out.bam"),
         "results/align_multi/{sample_id}/ReadsPerGene.out.tab",
         "results/align_multi/{sample_id}/Log.final.out",
         "results/align_multi/{sample_id}/SJ.out.tab"
