@@ -13,4 +13,4 @@ telescope:
 genome_fasta: "resources/GRCh38.d1.vd1.fa"
 annotation_gtf: "resources/gencode.v38.annotation.gtf"
 ega_credentials: "$HOME/.egaconfig"
-tmpdir: "/athena/nixonlab/scratch/tof4003/UM_mets_tmp"
+tmp: "/athena/nixonlab/scratch/tof4003/UM_mets_tmp"
