@@ -51,7 +51,6 @@ picard RevertSam\
  -O {output[0]}\
  --SANITIZE true\
  --COMPRESSION_LEVEL 0\
- --VALIDATION_STRINGENCY SILENT\
  {params.attr_to_clear}\
  --TMP_DIR {params.tmpdir}
 chmod 600 {output[0]}
