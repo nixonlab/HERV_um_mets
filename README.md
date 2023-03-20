@@ -37,8 +37,8 @@ snakemake --profile profiles/aws/ all
 
 Change sample download table and method. This pipeline uses different methods to download files.
 
-TCGA: curl
-EGA (Nilsson): pyega3
+TCGA: curl;
+EGA (Nilsson): pyega3;
 MSK: already obtained from collaboration with MSK IMPACT project
 
 ## Usage
